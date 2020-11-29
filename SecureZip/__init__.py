@@ -13,6 +13,7 @@ killswitch = False
 symlink_found = False
 current_level = 0
 current_zips = 0
+file = None
 
 class Loader:
     def __init__(self, zip_file: Union[PurePath, PosixPath, WindowsPath], ratio_threshold: int = 1032,
@@ -26,6 +27,13 @@ class Loader:
          than 3. !Aborting will mark the zip as malicious!
         :param killswitch_seconds: Seconds to allow traversing the zip, before hitting killswitch to prevent hangs
         """
+        global symlink_found, killswitch, current_zips, current_level, file
+        if file:
+            raise Exception('Remove the old zip first by calling .reset(), temporary solution until we get rid of the globals')
+        symlink_found = False
+        killswitch = False
+        current_level = 0
+        current_zips = 0
         self.zip_file = zip_file
         self.ratio_threshold = ratio_threshold
         self.nested_zips_limit = nested_zips_limit
@@ -33,21 +41,27 @@ class Loader:
         self.nested_levels_limit = nested_levels_limit
         self.killswitch_seconds = killswitch_seconds
         self.__output = {}
+        file = zip_file
 
+    def reset(self):
+        global symlink_found, killswitch, current_zips, current_level, file
+        symlink_found = False
+        killswitch = False
+        current_level = 0
+        current_zips = 0
+        file = None
 
-    def __recursive_zips(self, zip_bytes: io.BytesIO, count: int = 0, level: int = 0, zipfiles_limit: int = None, levels_limit: int = None) -> (int, int):
+    def __recursive_zips(self, zip_bytes: io.BytesIO, count: int = 0, level: int = 0) -> (int, int):
         global killswitch, symlink_found, current_zips,current_level
-        #print('\tlevel:',level)
-        if zipfiles_limit and count >= zipfiles_limit:
+
+        if self.nested_zips_limit and count >= self.nested_zips_limit or self.nested_levels_limit and level > self.nested_levels_limit or killswitch:
             return 0, level -1
-        if level > levels_limit or killswitch:
-            return 1, level -1
         toplevel = level
         with ZipFile(zip_bytes, 'r') as zf:
             cur_count = 0
             for f in zf.namelist():
                 if killswitch:
-                    return 1, levels_limit
+                    return cur_count, self.nested_levels_limit
 
                 if os.path.islink(f):
                     symlink_found = True
@@ -55,7 +69,7 @@ class Loader:
                 if f.endswith('.zip'):
                     cur_count += 1
                     zfiledata = io.BytesIO(zf.read(f))
-                    a,b = self.__recursive_zips(zfiledata, cur_count, level= toplevel + 1, zipfiles_limit= zipfiles_limit, levels_limit=levels_limit)
+                    a,b = self.__recursive_zips(zfiledata, cur_count, level= level + 1)
                     cur_count += a
                     if b>toplevel:
                         toplevel = b
@@ -74,11 +88,11 @@ class Loader:
         :return: string representation of size (bytes to kb,mb,gb...)
         """
         n = 0
-        power_labels = {0: '', 1: 'kilo', 2: 'mega', 3: 'giga', 4: 'tera', 5: 'peta', 6: 'exa'}
+        size_labels = {0: '', 1: 'kilo', 2: 'mega', 3: 'giga', 4: 'tera', 5: 'peta', 6: 'exa'}
         while bytes >= 1024:
             bytes /= 1024
             n += 1
-        return f'{bytes:.2f}' + " " + power_labels[n] + 'bytes'
+        return f'{bytes:.2f}' + " " + size_labels[n] + 'bytes'
 
 
     def is_dangerous(self) -> bool:
@@ -97,7 +111,7 @@ class Loader:
             tasks = []
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 try:
-                    tasks.append(executor.submit(self.__recursive_zips, zdata, 0, zipfiles_limit=self.nested_zips_limit, levels_limit=self.nested_levels_limit))
+                    tasks.append(executor.submit(self.__recursive_zips, zdata, 0))
                     for future in concurrent.futures.as_completed(tasks,timeout=self.killswitch_seconds):
                         result = future.result(timeout=self.killswitch_seconds)
                 except concurrent.futures.TimeoutError:
@@ -113,11 +127,12 @@ class Loader:
                 toplevel = result[1]
             if count > 3:
                 nested_zips = True
-            with ZipFile(zdata) as zf:
-                compression = sum(z.compress_size for z in zf.infolist())
+            compression = self.zip_file.stat().st_size
 
-
-        ratio = self.ss / compression
+        try:
+            ratio = self.ss / compression
+        except ZeroDivisionError:
+            ratio = 0.00
 
         try:
             compression = Loader.format_bytes(compression)

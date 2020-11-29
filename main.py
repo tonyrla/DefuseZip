@@ -16,3 +16,4 @@ for text, file in files.items():
     print('----', text, '----')
     print('\tDangerous:',zip.is_dangerous())
     zip.output()
+    zip.reset() #Required atm, due to using globals
