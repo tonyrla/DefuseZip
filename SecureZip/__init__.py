@@ -37,6 +37,7 @@ class Loader:
         self.__scan_completed = False
         self.__ratio = 0
         self.__symlinks_allowed = symlinks_allowed
+        self.__is_dangerous = False
 
         self.highest_level = 0
         self.nested_zips_count = 0
@@ -91,6 +92,8 @@ class Loader:
             n += 1
         return f'{bytes:.2f}' + " " + size_labels[n] + 'bytes'
 
+    def is_dangerous(self) -> bool:
+        return self.__is_dangerous
 
     def scan(self) -> bool:
         """
@@ -136,8 +139,10 @@ class Loader:
 
         if self.__ratio > self.__ratio_threshold or nested_zips_limit_reached or self.__killswitch or ( not self.__symlinks_allowed and self.__symlink_found ):
             self.__scan_completed = True
+            self.__is_dangerous = True
             return True
         self.__scan_completed = True
+        self.__is_dangerous = False
         return False
 
     def output(self):

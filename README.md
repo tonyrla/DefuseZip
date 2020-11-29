@@ -38,7 +38,16 @@ if zip.scan() and zip.get_compression_ratio() > 1032:
 else:
     #do something with the zip
 ```
+```
+from pathlib import Path
+import SecureZip
 
+file = Path('myzip.zip')
+zip = SecureZip.Loader(zip_file=file)
+zip.scan() # Returns true when zip should be considered malicious
+if zip.is_dangerous(): # Returns true when zip should be considered malicious
+    do stuff
+```
 
 
 
