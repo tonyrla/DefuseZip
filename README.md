@@ -30,7 +30,7 @@ else:
 
 
 
-###Example output from output() after calling scan() -> bool
+### Example output from output() after calling scan() -> bool
 * Single file in zip
 
         Dangerous: False

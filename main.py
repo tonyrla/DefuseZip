@@ -1,19 +1,21 @@
-import SecureZip
+import SecureZip, os
 from pathlib import Path
 
 files = {
     'Single file in zip': Path('example_zips') / 'single.zip',
     'Double nested zips': Path('example_zips') / 'nested.zip',
-    '10GB zipbomb': Path('example_zips') / 'medium_zipbomb.zip',
-    '100GB zipbomb': Path('example_zips') / 'big_zipbomb.zip',
-    '!HUGE! zipbomb': Path('example_zips') / 'bigger_zipbomb.zip',
-    'BAMSOFTWARE zblg 10mb -> 281 TB': Path('example_zips') / 'zblg.zip',
-    'BAMSOFTWARE zbxl 46mb -> 4.5 PB': Path('example_zips') / 'zbxl.zip'
+    '10gb / 19.5kb zipbomb': Path('example_zips') / 'medium_zipbomb.zip',
+    '100gb / 9.7kb zipbomb': Path('example_zips') / 'big_zipbomb.zip',
+    '97tb / 14,5kb zipbomb': Path('example_zips') / 'bigger_zipbomb.zip',
+    'HUGE unknown size zipbomb': Path('example_zips') / 'huge_zipbomb.zip',
+    '281tb / 10mb BAMSOFTWARE zblg FLAT zipbomb': Path('example_zips') / 'zblg.zip',
+    '4.5pb / 46mb BAMSOFTWARE zbxl FLAT zipbomb': Path('example_zips') / 'zbxl.zip'
 }
 
 for text, file in files.items():
-    zip = SecureZip.Loader(file, nested_levels_limit=5000, killswitch_seconds=5)
+    #To completely travel the 97 Terabyte zipbomb (bigger_zipbomb.zip), you'll need ~300 second killswitch,
+    # "huge_zipbomb.zip" requires prolly 5 times that much. Both of them have well over 100 000 zips
+    zip = SecureZip.Loader(file, nested_levels_limit=100, killswitch_seconds=5, nested_zips_limit=100000, ratio_threshold=1032)
     print('----', text, '----')
-    print('\tDangerous:',zip.is_dangerous())
+    print('\tDangerous:',zip.scan())
     zip.output()
-    zip.reset() #Required atm, due to using globals
