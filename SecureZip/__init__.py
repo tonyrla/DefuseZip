@@ -11,7 +11,7 @@ __version__ = "0.1"
 
 class Loader:
     def __init__(self, zip_file: Union[PurePath, PosixPath, WindowsPath], ratio_threshold: int = 1032,
-                     nested_zips_limit: int = 3, nested_levels_limit: int = 2, killswitch_seconds: int = 1):
+                     nested_zips_limit: int = 3, nested_levels_limit: int = 2, killswitch_seconds: int = 1, symlinks_allowed: bool = False):
         """
         SecureZip initializer, loads the zip and sets the arguments
         :param zip_file: Path to zip
@@ -19,6 +19,7 @@ class Loader:
         :param nested_zips_limit: Total zip count when to abort. !Aborting will mark the zip as malicious!
         :param nested_levels_limit: Limit when to abort when travelling inside zips. !Aborting will mark the zip as malicious!
         :param killswitch_seconds: Seconds to allow traversing the zip, before hitting killswitch to prevent hangs
+        :param symlinks_allowed: Boolean. Default = False
         """
 
         self.__killswitch = False
@@ -35,6 +36,7 @@ class Loader:
         self.__compressed_size = zip_file.stat().st_size
         self.__scan_completed = False
         self.__ratio = 0
+        self.__symlinks_allowed = symlinks_allowed
 
         self.highest_level = 0
         self.nested_zips_count = 0
@@ -132,7 +134,7 @@ class Loader:
         self.__output = {'Message':self.__message,'Compression ratio': f'{self.__ratio:.2f}' + ' Uncompressed size: ' + self.__uncompressed_size_str + ' Compressed size: ' + self.__compressed_size_str, 'Nested zips': self.nested_zips_count, 'Nested levels': self.highest_level,
                          'Symlinks':self.__symlink_found}
 
-        if self.__ratio > self.__ratio_threshold or nested_zips_limit_reached or self.__killswitch:
+        if self.__ratio > self.__ratio_threshold or nested_zips_limit_reached or self.__killswitch or ( not self.__symlinks_allowed and self.__symlink_found ):
             self.__scan_completed = True
             return True
         self.__scan_completed = True

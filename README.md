@@ -21,6 +21,7 @@ Loader parameters:
 * [OPTIONAL] nested_zips_limit: Total zip count when to abort and rule the zip malicious. Default = 3
 * [OPTIONAL] nested_levels_limit: Limit when to abort travelling the zips and rule the zip malicious. Default = 2
 * [OPTIONAL] killswitch_seconds: Seconds to allow traversing the zip. After the limit is hit, zip is ruled malicious. Default = 1
+* [OPTIONAL] symlinks_allowed: Boolean. Default = False
 
 ```
 from pathlib import Path
