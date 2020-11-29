@@ -15,12 +15,19 @@ It is a work in progress, but the scan feature is usable and safe_extract works 
 pip install SecureZip
 ```
 ### Usage:
+Loader parameters:
+* [REQUIRED] zip_file: Path to zip
+* [OPTIONAL] ratio_threshold: compression ratio threshold when to rule the zip malicious. Default = 1032
+* [OPTIONAL] nested_zips_limit: Total zip count when to abort and rule the zip malicious. Default = 3
+* [OPTIONAL] nested_levels_limit: Limit when to abort travelling the zips and rule the zip malicious. Default = 2
+* [OPTIONAL] killswitch_seconds: Seconds to allow traversing the zip. After the limit is hit, zip is ruled malicious. Default = 1
+
 ```
 from pathlib import Path
 import SecureZip
 
-zipfile = Path('myzip.zip')
-zip = SecureZip.Loader(zipfile)
+file = Path('myzip.zip')
+zip = SecureZip.Loader(zip_file=file)
 if zip.scan() and zip.get_compression_ratio() > 1032:
     print(zip.output())
 else:
@@ -47,7 +54,7 @@ else:
         Nested zips = 5
         Nest Levels = 2
         Symlinks = False
-* 97tb / 14,5kb zipbomb
+* 97tb / 14,5kb zipbomb -- with 5s killswitch enabled to prevent long scan time : SecureZip.Loader(..., killswitch_seconds=5)
 
         Dangerous: True
         Message = Killswitch enabled due to too deep recursion or timeout, values collected are valid only to that point

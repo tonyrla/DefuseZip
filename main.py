@@ -8,8 +8,8 @@ files = {
     '100gb / 9.7kb zipbomb': Path('example_zips') / 'big_zipbomb.zip',
     '97tb / 14,5kb zipbomb': Path('example_zips') / 'bigger_zipbomb.zip',
     'HUGE unknown size zipbomb': Path('example_zips') / 'huge_zipbomb.zip',
-    '281tb / 10mb BAMSOFTWARE zblg FLAT zipbomb': Path('example_zips') / 'zblg.zip',
-    '4.5pb / 46mb BAMSOFTWARE zbxl FLAT zipbomb': Path('example_zips') / 'zbxl.zip'
+    '+250tb / 10mb BAMSOFTWARE zblg FLAT zipbomb': Path('example_zips') / 'zblg.zip',
+    '+4pb / 46mb BAMSOFTWARE zbxl FLAT zipbomb': Path('example_zips') / 'zbxl.zip'
 }
 
 for text, file in files.items():

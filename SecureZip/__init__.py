@@ -11,17 +11,15 @@ __version__ = "0.1"
 
 class Loader:
     def __init__(self, zip_file: Union[PurePath, PosixPath, WindowsPath], ratio_threshold: int = 1032,
-                     nested_zips_limit: int = None, nested_levels_limit: int = 3, killswitch_seconds: int = 5):
+                     nested_zips_limit: int = 3, nested_levels_limit: int = 2, killswitch_seconds: int = 1):
         """
-
+        SecureZip initializer, loads the zip and sets the arguments
         :param zip_file: Path to zip
         :param ratio_threshold: compression ratio threshold when to call the zip malicious
         :param nested_zips_limit: Total zip count when to abort. !Aborting will mark the zip as malicious!
         :param nested_levels_limit: Limit when to abort when travelling inside zips. !Aborting will mark the zip as malicious!
         :param killswitch_seconds: Seconds to allow traversing the zip, before hitting killswitch to prevent hangs
         """
-
-        file = zip_file
 
         self.__killswitch = False
         self.__output = {}
@@ -50,6 +48,7 @@ class Loader:
 
         if self.__nested_zips_limit and self.nested_zips_count >= self.__nested_zips_limit or self.__nested_levels_limit and self.highest_level > self.__nested_levels_limit or self.__killswitch:
             return 0, level -1
+
         toplevel = level
         with ZipFile(zip_bytes, 'r') as zf:
             cur_count = 0
@@ -96,9 +95,8 @@ class Loader:
         Scans the zip recursively and returns if the zip should be considered dangerous
         :return: boolean
         """
-        global current_zips, current_level
-        nested_zips = False
-        global ss
+        nested_zips_limit_reached = False
+
         if not self.__zip_file.exists():
             raise FileNotFoundError
 
@@ -107,13 +105,10 @@ class Loader:
             tasks = []
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 try:
-                    tasks.append(executor.submit(self.__recursive_zips, zdata, 0))
-                    for future in concurrent.futures.as_completed(tasks,timeout=self.__killswitch_seconds):
-                        result = future.result(timeout=self.__killswitch_seconds)
+                    future = executor.submit(self.__recursive_zips, zdata, 0)
+                    future.result(timeout=self.__killswitch_seconds)
                 except concurrent.futures.TimeoutError:
-                    for task in tasks:
-                        self.__killswitch = True
-                        task.cancel()
+                    self.__killswitch = True
 
             if self.__nested_zips_limit and self.nested_zips_count > self.__nested_zips_limit:
                 nested_zips_limit_reached = True
