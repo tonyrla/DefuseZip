@@ -24,6 +24,7 @@ class Loader:
         :param nested_zips_limit: Total zip count when to abort. !Aborting will mark the zip as malicious!
         :param nested_levels_limit: Limit when to abort when travelling inside zips. You REALLY don't want to try higher
          than 3. !Aborting will mark the zip as malicious!
+        :param killswitch_seconds: Seconds to allow traversing the zip, before hitting killswitch to prevent hangs
         """
         self.zip_file = zip_file
         self.ratio_threshold = ratio_threshold
@@ -66,16 +67,25 @@ class Loader:
 
 
     @classmethod
-    def format_bytes(cls,size):
+    def format_bytes(cls, bytes) -> str:
+        """
+
+        :param bytes: int value of bytes
+        :return: string representation of size (bytes to kb,mb,gb...)
+        """
         n = 0
         power_labels = {0: '', 1: 'kilo', 2: 'mega', 3: 'giga', 4: 'tera', 5: 'peta', 6: 'exa'}
-        while size >= 1024:
-            size /= 1024
+        while bytes >= 1024:
+            bytes /= 1024
             n += 1
-        return f'{size:.2f}' + " " + power_labels[n] + 'bytes'
+        return f'{bytes:.2f}' + " " + power_labels[n] + 'bytes'
 
 
     def is_dangerous(self) -> bool:
+        """
+        Returns wether the ZIP archive should be considered dangerous
+        :return: boolean
+        """
         global killswitch, symlink_found, current_zips, current_level
         nested_zips = False
         global ss
@@ -129,6 +139,12 @@ class Loader:
         return False
 
     def output(self):
+        """
+        Returns information about the archive and scanning process
+        :return:
+        """
+        if len(self.__output) <= 0:
+            print('You need to run .is_dangerous() first')
         for k,v in self.__output.items():
             print('\t{} = {}'.format(k,v))
 
