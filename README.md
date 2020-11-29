@@ -10,6 +10,10 @@
 I couldn't find an opensource ZipBomb blocker, so this is my attempt at making one.
 
 It is a work in progress, but the scan feature is usable and safe_extract works for linux.
+
+DO NOT EXTRACT THE EXAMPLE ZIPS! It will make you sad. No one wants you to be sad.
+
+They are malicious by intent and only for testing purposes.
 ### Installation:
 ```
 pip install SecureZip
