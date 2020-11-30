@@ -2,6 +2,7 @@ import SecureZip, os
 from pathlib import Path
 
 files = {
+    'Directory travelsal': Path('example_zips') / 'evilrobot.zip',
     'Single file in zip': Path('example_zips') / 'single.zip',
     'Double nested zips': Path('example_zips') / 'nested.zip',
     '10gb / 19.5kb zipbomb': Path('example_zips') / 'medium_zipbomb.zip',
@@ -18,5 +19,7 @@ for text, file in files.items():
     zip = SecureZip.Loader(file, nested_levels_limit=100, killswitch_seconds=5, nested_zips_limit=100000, ratio_threshold=1032)
     print('----', text, '----')
     zip.scan()
-    print('\tDangerous:',zip.is_dangerous())
-    zip.output()
+    if zip.is_dangerous():
+        zip.output()
+    else:
+        print('Not dangerous, should have no worry extracting this')

@@ -11,37 +11,42 @@ __version__ = "0.1"
 
 class Loader:
     def __init__(self, zip_file: Union[PurePath, PosixPath, WindowsPath], ratio_threshold: int = 1032,
-                     nested_zips_limit: int = 3, nested_levels_limit: int = 2, killswitch_seconds: int = 1, symlinks_allowed: bool = False):
+                     nested_zips_limit: int = 3, nested_levels_limit: int = 2, killswitch_seconds: int = 1,
+                 symlinks_allowed: bool = False, directory_travelsal_allowed: bool = False):
         """
         SecureZip initializer, loads the zip and sets the arguments
         :param zip_file: Path to zip
         :param ratio_threshold: compression ratio threshold when to call the zip malicious
         :param nested_zips_limit: Total zip count when to abort. !Aborting will mark the zip as malicious!
-        :param nested_levels_limit: Limit when to abort when travelling inside zips. !Aborting will mark the zip as malicious!
+        :param nested_levels_limit: Limit when to abort when travelling inside zips. !Aborting will mark the zip as
+        malicious!
         :param killswitch_seconds: Seconds to allow traversing the zip, before hitting killswitch to prevent hangs
         :param symlinks_allowed: Boolean. Default = False
+        :param directory_travelsal_allowed: Boolean. Default = False
         """
-
-        self.__killswitch = False
-        self.__output = {}
-        self.__ss=0
         self.__killswitch_seconds = killswitch_seconds
-        self.__symlink_found = False
-        self.__uncompressed_size_str = ""
-        self.__compressed_size_str = ""
         self.__ratio_threshold = ratio_threshold
         self.__nested_zips_limit = nested_zips_limit
+        self.__symlinks_allowed = symlinks_allowed
         self.__nested_levels_limit = nested_levels_limit
         self.__zip_file = zip_file
-        self.__compressed_size = zip_file.stat().st_size
-        self.__scan_completed = False
-        self.__ratio = 0
-        self.__symlinks_allowed = symlinks_allowed
-        self.__is_dangerous = False
+        self.__directory_travelsal = directory_travelsal_allowed
 
+        self.__scan_completed = False
+        self.__is_dangerous = False
+        self.__killswitch = False
+        self.__symlink_found = False
+
+        self.__compressed_size = zip_file.stat().st_size
+        self.__ss=0
+        self.__ratio = 0
         self.highest_level = 0
         self.nested_zips_count = 0
-        self.message = None
+
+        self.__output = {}
+        self.__uncompressed_size_str = ""
+        self.__compressed_size_str = ""
+        self.__message = None
 
 
 
@@ -49,7 +54,8 @@ class Loader:
     def __recursive_zips(self, zip_bytes: io.BytesIO, level: int = 0) -> (int, int):
         global symlink_found, current_zips,current_level
 
-        if self.__nested_zips_limit and self.nested_zips_count >= self.__nested_zips_limit or self.__nested_levels_limit and self.highest_level > self.__nested_levels_limit or self.__killswitch:
+        if self.__nested_zips_limit and self.nested_zips_count >= self.__nested_zips_limit or \
+                self.__nested_levels_limit and self.highest_level > self.__nested_levels_limit or self.__killswitch:
             return 0, level -1
 
         toplevel = level
@@ -61,6 +67,8 @@ class Loader:
 
                 if os.path.islink(f):
                     self.__symlink_found = True
+                if '..\\' in f or '../' in f:
+                    self.__directory_travelsal = True
 
                 if f.endswith('.zip'):
                     cur_count += 1
@@ -94,6 +102,9 @@ class Loader:
 
     def is_dangerous(self) -> bool:
         return self.__is_dangerous
+
+    def has_travelsal(self) -> bool:
+        return self.__directory_travelsal
 
     def scan(self) -> bool:
         """
@@ -130,18 +141,24 @@ class Loader:
         except KeyError:
             self.__uncompressed_size_str = 'TOO LARGE TO SHOW'
         if not self.__killswitch:
-            self.__message = 'Aborted due to too deep recursion' if self.highest_level>self.__nested_levels_limit else 'Success'
+            self.__message = 'Aborted due to too deep recursion' if self.highest_level>self.__nested_levels_limit else \
+                'Success'
         else:
-            self.__message = 'Killswitch enabled due to too deep recursion or timeout, values collected are valid only to that point'
+            self.__message = 'Killswitch enabled due to too deep recursion or timeout, ' \
+                             'values collected are valid only to that point'
 
-        self.__output = {'Message':self.__message,'Compression ratio': f'{self.__ratio:.2f}' + ' Uncompressed size: ' + self.__uncompressed_size_str + ' Compressed size: ' + self.__compressed_size_str, 'Nested zips': self.nested_zips_count, 'Nested levels': self.highest_level,
-                         'Symlinks':self.__symlink_found}
+        self.__output = {'Message':self.__message, 'Dangerous':self.__is_dangerous,
+                         'Compression ratio': f'{self.__ratio:.2f}' + ' Uncompressed size: ' +
+                        self.__uncompressed_size_str + ' Compressed size: ' + self.__compressed_size_str,
+                         'Nested zips': self.nested_zips_count, 'Nested levels': self.highest_level,
+                         'Symlinks':self.__symlink_found, 'Directory travelsal':self.__directory_travelsal
+                         }
 
-        if self.__ratio > self.__ratio_threshold or nested_zips_limit_reached or self.__killswitch or ( not self.__symlinks_allowed and self.__symlink_found ):
-            self.__scan_completed = True
+        self.__scan_completed = True
+        if self.__ratio > self.__ratio_threshold or nested_zips_limit_reached or self.__killswitch or\
+                ( not self.__symlinks_allowed and self.__symlink_found ) or self.__directory_travelsal:
             self.__is_dangerous = True
             return True
-        self.__scan_completed = True
         self.__is_dangerous = False
         return False
 
