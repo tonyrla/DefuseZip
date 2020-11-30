@@ -19,13 +19,19 @@ They are malicious by intent and only for testing purposes.
 pip install SecureZip
 ```
 ### Usage:
-Loader parameters:
+#### SecureZip.Loader parameters:
 * [REQUIRED] zip_file: Path to zip
 * [OPTIONAL] ratio_threshold: compression ratio threshold when to rule the zip malicious. Default = 1032
 * [OPTIONAL] nested_zips_limit: Total zip count when to abort and rule the zip malicious. Default = 3
 * [OPTIONAL] nested_levels_limit: Limit when to abort travelling the zips and rule the zip malicious. Default = 2
 * [OPTIONAL] killswitch_seconds: Seconds to allow traversing the zip. After the limit is hit, zip is ruled malicious. Default = 1
 * [OPTIONAL] symlinks_allowed: Boolean. Default = False
+* [OPTIONAL] directory_travelsal_allowed: Boolean. Default = False
+
+#### Loader methods:
+* is_dangerous() -> bool
+* has_travelsal() -> bool
+* has_links() -> bool
 
 ```
 from pathlib import Path

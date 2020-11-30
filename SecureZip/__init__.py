@@ -65,10 +65,13 @@ class Loader:
                 if self.__killswitch:
                     return cur_count, self.__nested_levels_limit
 
-                if os.path.islink(f):
-                    self.__symlink_found = True
                 if '..\\' in f or '../' in f:
                     self.__directory_travelsal = True
+                    continue
+                else:
+                    if Path(f).is_symlink():
+                        self.__symlink_found = True
+                        continue
 
                 if f.endswith('.zip'):
                     cur_count += 1
@@ -105,6 +108,9 @@ class Loader:
 
     def has_travelsal(self) -> bool:
         return self.__directory_travelsal
+
+    def has_links(self) -> bool:
+        return self.__symlink_found
 
     def scan(self) -> bool:
         """
