@@ -6,8 +6,9 @@ with open("README.md", 'r') as f:
 setup(
     name='SecureZip',
     version='0.0.1',
-    description='ZipBomb scanner and safe extract. Work in progress.',
+    description='Gathers information on a zip, mainly for seeing wether the zip could be considered malicious (Zipbomb, travelsal etc.). Work in progress.',
     long_description=long_description,
+    long_description_content_type="text/markdown",
     license='MIT',
     author='Tony Rintala',
     author_email='rintala.tony@gmail.com',

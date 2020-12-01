@@ -18,7 +18,7 @@ for text, file in files.items():
     # "huge_zipbomb.zip" requires prolly 5 times that much. Both of them have well over 100 000 zips
     zip = SecureZip.Loader(file, nested_levels_limit=100, killswitch_seconds=5, nested_zips_limit=100000, ratio_threshold=1032)
     print('----', text, '----')
-    zip.scan()
+    print(zip.scan())
     if zip.is_dangerous():
         zip.output()
     else:

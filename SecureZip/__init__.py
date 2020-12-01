@@ -52,7 +52,6 @@ class Loader:
 
 
     def __recursive_zips(self, zip_bytes: io.BytesIO, level: int = 0) -> (int, int):
-        global symlink_found, current_zips,current_level
 
         if self.__nested_zips_limit and self.nested_zips_count >= self.__nested_zips_limit or \
                 self.__nested_levels_limit and self.highest_level > self.__nested_levels_limit or self.__killswitch:
@@ -68,10 +67,10 @@ class Loader:
                 if '..\\' in f or '../' in f:
                     self.__directory_travelsal = True
                     continue
-                else:
-                    if Path(f).is_symlink():
-                        self.__symlink_found = True
-                        continue
+                #else:
+                #    if Path(f).is_symlink():
+                #        self.__symlink_found = True
+                #        continue
 
                 if f.endswith('.zip'):
                     cur_count += 1
@@ -84,8 +83,6 @@ class Loader:
                     self.nested_zips_count = cur_count
                 else:
                     self.__ss += zf.getinfo(f).file_size
-        current_level = toplevel
-        current_zips = cur_count
 
         return cur_count, toplevel
 
@@ -124,7 +121,6 @@ class Loader:
 
         with open(self.__zip_file, 'rb') as f:
             zdata = io.BytesIO(f.read())
-            tasks = []
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 try:
                     future = executor.submit(self.__recursive_zips, zdata, 0)
@@ -139,7 +135,6 @@ class Loader:
             self.__ratio = self.__ss / self.__compressed_size
         except ZeroDivisionError:
             self.__ratio = 0.00
-
         try:
             self.__compressed_size_str = Loader.format_bytes(self.__compressed_size)
             self.__uncompressed_size_str = Loader.format_bytes(self.__ss)
@@ -153,6 +148,19 @@ class Loader:
             self.__message = 'Killswitch enabled due to too deep recursion or timeout, ' \
                              'values collected are valid only to that point'
 
+
+
+        self.__scan_completed = True
+        self.__is_dangerous = False
+        if (self.__ratio > self.__ratio_threshold):
+            self.__is_dangerous = True
+        if nested_zips_limit_reached:
+            self.__is_dangerous = True
+        if self.__killswitch:
+            self.__is_dangerous = True
+        if ( not self.__symlinks_allowed and self.__symlink_found ) or self.__directory_travelsal:
+            self.__is_dangerous = True
+
         self.__output = {'Message':self.__message, 'Dangerous':self.__is_dangerous,
                          'Compression ratio': f'{self.__ratio:.2f}' + ' Uncompressed size: ' +
                         self.__uncompressed_size_str + ' Compressed size: ' + self.__compressed_size_str,
@@ -160,13 +168,7 @@ class Loader:
                          'Symlinks':self.__symlink_found, 'Directory travelsal':self.__directory_travelsal
                          }
 
-        self.__scan_completed = True
-        if self.__ratio > self.__ratio_threshold or nested_zips_limit_reached or self.__killswitch or\
-                ( not self.__symlinks_allowed and self.__symlink_found ) or self.__directory_travelsal:
-            self.__is_dangerous = True
-            return True
-        self.__is_dangerous = False
-        return False
+        return self.__is_dangerous
 
     def output(self):
         """
