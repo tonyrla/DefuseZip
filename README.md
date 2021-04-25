@@ -1,4 +1,4 @@
-# SecureZip
+# DefuseZip
  
 ## Table of contents
 * [Description and general info](#description--general-info)
