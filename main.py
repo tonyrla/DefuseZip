@@ -1,4 +1,4 @@
-import SecureZip, os
+import DefuseZip, os
 from pathlib import Path
 
 files = {
@@ -16,7 +16,7 @@ files = {
 for text, file in files.items():
     #To completely travel the 97 Terabyte zipbomb (bigger_zipbomb.zip), you'll need ~300 second killswitch,
     # "huge_zipbomb.zip" requires prolly 5 times that much. Both of them have well over 100 000 zips
-    zip = SecureZip.Loader(file, nested_levels_limit=100, killswitch_seconds=5, nested_zips_limit=100000, ratio_threshold=1032)
+    zip = DefuseZip.Loader(file, nested_levels_limit=100, killswitch_seconds=5, nested_zips_limit=100000, ratio_threshold=1032)
     print('----', text, '----')
     print(zip.scan())
     if zip.is_dangerous():

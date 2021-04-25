@@ -127,3 +127,5 @@ dmypy.json
 .idea/
 create_zipbomb.py
 
+.vscode/settings.json
+DefuseZip/.vscode/settings.json

@@ -16,10 +16,10 @@ DO NOT EXTRACT THE EXAMPLE ZIPS! It will make you sad. No one wants you to be sa
 They are malicious by intent and only for testing purposes.
 ### Installation:
 ```
-pip install SecureZip
+pip install DefuseZip
 ```
 ### Usage:
-#### SecureZip.Loader parameters:
+#### DefuseZip.Loader parameters:
 * [REQUIRED] zip_file: Path to zip
 * [OPTIONAL] ratio_threshold: compression ratio threshold when to rule the zip malicious. Default = 1032
 * [OPTIONAL] nested_zips_limit: Total zip count when to abort and rule the zip malicious. Default = 3
@@ -35,10 +35,10 @@ pip install SecureZip
 
 ```
 from pathlib import Path
-import SecureZip
+import DefuseZip
 
 file = Path('myzip.zip')
-zip = SecureZip.Loader(zip_file=file)
+zip = DefuseZip.Loader(zip_file=file)
 if zip.scan() and zip.get_compression_ratio() > 1032:
     print(zip.output())
 else:
@@ -46,10 +46,10 @@ else:
 ```
 ```
 from pathlib import Path
-import SecureZip
+import DefuseZip
 
 file = Path('myzip.zip')
-zip = SecureZip.Loader(zip_file=file)
+zip = DefuseZip.Loader(zip_file=file)
 zip.scan() # Returns true when zip should be considered malicious
 if zip.is_dangerous(): # Returns true when zip should be considered malicious
     do stuff
@@ -66,7 +66,7 @@ if zip.is_dangerous(): # Returns true when zip should be considered malicious
         Nested zips = 0
         Nest Levels = 0
         Symlinks = False
-* Double nested zips -- with maximum nesting set to 4 : SecureZip.Loader(..., nested_zips_limit=4)
+* Double nested zips -- with maximum nesting set to 4 : DefuseZip.Loader(..., nested_zips_limit=4)
 
         Dangerous: True
         Message = Success
@@ -74,7 +74,7 @@ if zip.is_dangerous(): # Returns true when zip should be considered malicious
         Nested zips = 5
         Nest Levels = 2
         Symlinks = False
-* 97tb / 14,5kb zipbomb -- with 5s killswitch enabled to prevent long scan time : SecureZip.Loader(..., killswitch_seconds=5)
+* 97tb / 14,5kb zipbomb -- with 5s killswitch enabled to prevent long scan time : DefuseZip.Loader(..., killswitch_seconds=5)
 
         Dangerous: True
         Message = Killswitch enabled due to too deep recursion or timeout, values collected are valid only to that point
