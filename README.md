@@ -1,4 +1,5 @@
 # DefuseZip
+![Build Status](https://github.com/kuviokelluja/DefuseZip/actions/workflows/pytest_and_flake8.yml/badge.svg)
 
 ## Table of contents
 * [Description and general info](#description--general-info)
