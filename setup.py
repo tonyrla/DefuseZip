@@ -1,9 +1,11 @@
 from setuptools import setup
 import re
 
+
 def get_property(prop):
     result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open('DefuseZip/__init__.py').read())
     return result.group(1)
+
 
 with open("README.md", 'r') as f:
     long_description = f.read()
