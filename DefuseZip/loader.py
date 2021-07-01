@@ -28,6 +28,8 @@ class DefuseZip:
         :param symlinks_allowed: Boolean. Default = False
         :param directory_travelsal_allowed: Boolean. Default = False
         """
+        if not Path(zip_file).exists():
+            raise FileNotFoundError(zip_file)
         self.__killswitch_seconds = killswitch_seconds
         self.__ratio_threshold = ratio_threshold
         self.__nested_zips_limit = nested_zips_limit
@@ -41,7 +43,7 @@ class DefuseZip:
         self.__killswitch: bool = False
         self.__symlink_found: bool = False
 
-        self.__compressed_size: int = zip_file.stat().st_size
+        self.__compressed_size: int = self.__zip_file.stat().st_size
         self.__ss: int = 0
         self.__ratio: float = 0.00
         self.highest_level = 0
