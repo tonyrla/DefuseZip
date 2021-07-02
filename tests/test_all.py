@@ -1,5 +1,6 @@
 from DefuseZip.loader import DefuseZip
 from pathlib import Path
+import tempfile
 import pytest
 
 
@@ -55,3 +56,20 @@ class Test_all:
         )
         zip.scan()
         assert zip.is_dangerous() == expected
+
+    def test_safe_extract(self):
+        file = Path(__file__).parent / "example_zips" / "single.zip"
+        zip = DefuseZip(
+            file,
+            nested_levels_limit=100,
+            killswitch_seconds=5,
+            nested_zips_limit=100000,
+            ratio_threshold=1032,
+        )
+        zip.scan()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            zip.safe_extract(tmpdir,max_cpu_time=60)
+            dest = Path(tmpdir)
+            ex = any(dest.iterdir())
+        
+        assert ex
