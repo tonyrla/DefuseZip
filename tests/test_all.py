@@ -68,8 +68,8 @@ class Test_all:
         )
         zip.scan()
         with tempfile.TemporaryDirectory() as tmpdir:
-            zip.safe_extract(tmpdir,max_cpu_time=60)
+            zip.safe_extract(tmpdir, max_cpu_time=60)
             dest = Path(tmpdir)
             ex = any(dest.iterdir())
-        
+
         assert ex
