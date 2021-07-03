@@ -28,6 +28,8 @@ class DefuseZip:
         :param symlinks_allowed: Boolean. Default = False
         :param directory_travelsal_allowed: Boolean. Default = False
         """
+        if not Path(zip_file).exists():
+            raise FileNotFoundError(zip_file)
         self.__killswitch_seconds = killswitch_seconds
         self.__ratio_threshold = ratio_threshold
         self.__nested_zips_limit = nested_zips_limit
@@ -41,7 +43,7 @@ class DefuseZip:
         self.__killswitch: bool = False
         self.__symlink_found: bool = False
 
-        self.__compressed_size: int = zip_file.stat().st_size
+        self.__compressed_size: int = self.__zip_file.stat().st_size
         self.__ss: int = 0
         self.__ratio: float = 0.00
         self.highest_level = 0
@@ -235,35 +237,38 @@ class DefuseZip:
         :param max_filesize: Maximum single file size allowed to be created
         :return: boolean stating the success
         """
-        try:
-            self.raise_for_exception()
 
-            if not self.__zip_file.exists():
-                raise FileNotFoundError
-            if psutil.LINUX:
-                process = psutil.Process()
-                default_cpu = process.rlimit(psutil.RLIMIT_CPU)
-                default_memory = process.rlimit(psutil.RLIMIT_AS)
-                default_filesize = process.rlimit(psutil.RLIMIT_FSIZE)
+        # try:
+        self.raise_for_exception()
 
-                with ZipFile(self.__zip_file, "r") as zip_ref:
-                    if zip_ref.testzip():
-                        return False
+        if not self.__zip_file.exists():
+            raise FileNotFoundError
+        if psutil.LINUX:
+            process = psutil.Process()
+            default_cpu = process.rlimit(psutil.RLIMIT_CPU)
+            default_memory = process.rlimit(psutil.RLIMIT_AS)
+            default_filesize = process.rlimit(psutil.RLIMIT_FSIZE)
 
-                    process.rlimit(psutil.RLIMIT_CPU, (max_cpu_time, max_cpu_time))
-                    process.rlimit(psutil.RLIMIT_AS, (max_memory, max_memory))
-                    process.rlimit(psutil.RLIMIT_FSIZE, (max_filesize, max_filesize))
-                    zip_ref.extractall(destination_path)
-                    try:
-                        process.rlimit(psutil.RLIMIT_CPU, default_cpu)
-                        process.rlimit(psutil.RLIMIT_AS, default_memory)
-                        process.rlimit(psutil.RLIMIT_FSIZE, default_filesize)
-                    except Exception:
-                        pass
-            else:
-                raise NotImplementedError("Safe_extract not implemented for Windows")
-        except OSError:
-            return False
+            with ZipFile(self.__zip_file, "r") as zip_ref:
+                if zip_ref.testzip():
+                    return False
+
+                process.rlimit(psutil.RLIMIT_CPU, (max_cpu_time, max_cpu_time))
+                process.rlimit(psutil.RLIMIT_AS, (max_memory, max_memory))
+                process.rlimit(psutil.RLIMIT_FSIZE, (max_filesize, max_filesize))
+                zip_ref.extractall(destination_path)
+                try:
+                    process.rlimit(psutil.RLIMIT_CPU, default_cpu)
+                    process.rlimit(psutil.RLIMIT_AS, default_memory)
+                    process.rlimit(psutil.RLIMIT_FSIZE, default_filesize)
+                except Exception:
+                    pass
+        else:
+            raise NotImplementedError("Safe_extract not implemented for Windows")
+        # except OSError as e:
+        #    print('oserror:', str(e))
+        #    return False
+
         return True
 
     def raise_for_exception(self):
