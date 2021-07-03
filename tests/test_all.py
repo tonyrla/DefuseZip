@@ -3,6 +3,7 @@ import tempfile
 from pathlib import Path
 import pytest
 import sys
+from shutil import copy
 
 
 class Test_all:
@@ -67,7 +68,8 @@ class Test_all:
     def test_not_found(self, filename, expected, create):
         zfile = Path(__file__).parent / "example_zips" / filename
         if create:
-            zfile.touch()
+            cp = Path(zfile.parent / "single.zip")
+            copy(cp, zfile)
         with pytest.raises(FileNotFoundError):
             zip = DefuseZip(
                 zfile,
@@ -147,7 +149,9 @@ class Test_all:
             assert True
             return True
         zfile = Path(__file__).parent / "example_zips" / "deleted.zip"
-        zfile.touch()
+
+        cp = Path(zfile.parent / "single.zip")
+        copy(cp, zfile)
         zip = DefuseZip(
             zfile,
             nested_levels_limit=100,
