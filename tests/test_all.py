@@ -1,4 +1,5 @@
 from DefuseZip.loader import DefuseZip
+import tempfile
 from pathlib import Path
 import pytest
 import sys
@@ -93,6 +94,23 @@ class Test_all:
         captured = capsys.readouterr()
 
         assert "Dangerous = False" in captured.out
+
+    def test_safe_extract(self):
+        file = Path(__file__).parent / "example_zips" / "single.zip"
+        zip = DefuseZip(
+            file,
+            nested_levels_limit=100,
+            killswitch_seconds=5,
+            nested_zips_limit=100000,
+            ratio_threshold=1032,
+        )
+        zip.scan()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            zip.safe_extract(tmpdir, max_cpu_time=60)
+            dest = Path(tmpdir)
+            ex = any(dest.iterdir())
+
+        assert ex
 
     def test_output_dangerous(self, capsys):
         file = Path(__file__).parent / "example_zips" / "travelsal.zip"

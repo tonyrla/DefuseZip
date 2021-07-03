@@ -256,9 +256,12 @@ class DefuseZip:
                 process.rlimit(psutil.RLIMIT_RLIMIT_FSIZE, (max_filesize, max_filesize))
                 zip_ref.extractall(destination_path)
 
-            process.rlimit(psutil.RLIMIT_RLIMIT_CPU, default_cpu)
-            process.rlimit(psutil.RLIMIT_RLIMIT_AS, default_memory)
-            process.rlimit(psutil.RLIMIT_RLIMIT_FSIZE, default_filesize)
+            try:
+                process.rlimit(psutil.RLIMIT_RLIMIT_CPU, default_cpu)
+                process.rlimit(psutil.RLIMIT_RLIMIT_AS, default_memory)
+                process.rlimit(psutil.RLIMIT_RLIMIT_FSIZE, default_filesize)
+            except Exception:
+                pass
         else:
             raise NotImplementedError("Safe_extract not implemented for Windows")
         return True
