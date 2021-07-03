@@ -162,4 +162,5 @@ class Test_all:
         zip.scan()
         zfile.unlink()
         with pytest.raises(FileNotFoundError):
-            zip.safe_extract(Path.cwd())
+            with tempfile.TemporaryDirectory() as tmpdir:
+                zip.safe_extract(Path(tmpdir))
