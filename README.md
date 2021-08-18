@@ -1,5 +1,6 @@
 # DefuseZip
 ![Build Status](https://github.com/kuviokelluja/DefuseZip/actions/workflows/pytest_and_flake8.yml/badge.svg)
+[![codefactor](https://www.codefactor.io/repository/github/kuviokelluja/defusezip/badge/main)](https://www.codefactor.io/repository/github/kuviokelluja/defusezip/overview/main)
 
 ## Table of contents
 * [Description and general info](#description--general-info)
