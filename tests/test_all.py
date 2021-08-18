@@ -98,10 +98,9 @@ class Test_all:
         assert "Dangerous = False" in captured.out
 
     def test_safe_extract(self):
-        if sys.platform == "win32":
-            assert True
-            return True
         file = Path(__file__).parent / "example_zips" / "single.zip"
+        retval = False
+
         defusezip = DefuseZip(
             file,
             nested_levels_limit=100,
@@ -110,12 +109,23 @@ class Test_all:
             ratio_threshold=1032,
         )
         defusezip.scan()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            defusezip.safe_extract(tmpdir, max_cpu_time=60)
-            dest = Path(tmpdir)
-            ex = any(dest.iterdir())
+        if sys.platform == "win32":
+            with pytest.raises(NotImplementedError):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    retval = defusezip.safe_extract(tmpdir, max_cpu_time=60)
+                    dest = Path(tmpdir)
+                    ex = any(dest.iterdir())
+            # expected value to true, because the real test on windows is NotImplementedError
+            ex = True
+            retval = True
+        else:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                retval = defusezip.safe_extract(tmpdir, max_cpu_time=60)
+                dest = Path(tmpdir)
+                ex = any(dest.iterdir())
 
         assert ex
+        assert retval
 
     def test_output_dangerous(self, capsys):
         file = Path(__file__).parent / "example_zips" / "travelsal.zip"

@@ -1,14 +1,13 @@
 # DefuseZip
-[![codefactor](https://www.codefactor.io/repository/github/kuviokelluja/defusezip/badge/main)](https://www.codefactor.io/repository/github/kuviokelluja/defusezip/overview/main) 
-
 ![Build Status](https://github.com/kuviokelluja/DefuseZip/actions/workflows/pytest_and_flake8.yml/badge.svg)
-
+[![codefactor](https://www.codefactor.io/repository/github/kuviokelluja/defusezip/badge/main)](https://www.codefactor.io/repository/github/kuviokelluja/defusezip/overview/main)
 ![Mypy](https://github.com/kuviokelluja/DefuseZip/actions/workflows/mypy.yml/badge.svg)
 
+----
+![GitHub pull requests](https://img.shields.io/github/issues-pr/kuviokelluja/DefuseZip)
+![GitHub issues](https://img.shields.io/github/issues-raw/kuviokelluja/DefuseZip)
 
-
-
-
+----
 
 
 ## Table of contents
