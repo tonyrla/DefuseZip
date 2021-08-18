@@ -1,7 +1,7 @@
 from pathlib import PosixPath, WindowsPath, Path
 from typing import Union, Dict, Any, Tuple
 from zipfile import ZipFile
-import psutil
+import psutil # type: ignore
 import io
 import concurrent.futures
 
