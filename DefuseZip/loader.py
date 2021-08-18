@@ -1,7 +1,7 @@
 from pathlib import PosixPath, WindowsPath, Path
 from typing import Union, Dict, Any, Tuple
 from zipfile import ZipFile
-import psutil
+import psutil  # type: ignore
 import io
 import concurrent.futures
 
@@ -148,6 +148,7 @@ class DefuseZip:
                 self.__nested_zips_limit_reached = True  # pragma: no cover
             else:
                 self.__nested_zips_limit_reached = False  # pragma: no cover
+
 
     def __set_zip_status(self):
         if self.__ratio > self.__ratio_threshold:

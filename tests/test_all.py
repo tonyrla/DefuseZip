@@ -100,6 +100,7 @@ class Test_all:
     def test_safe_extract(self):
         file = Path(__file__).parent / "example_zips" / "single.zip"
         retval = False
+
         defusezip = DefuseZip(
             file,
             nested_levels_limit=100,
