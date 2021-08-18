@@ -149,7 +149,6 @@ class DefuseZip:
             else:
                 self.__nested_zips_limit_reached = False  # pragma: no cover
 
-
     def __set_zip_status(self):
         if self.__ratio > self.__ratio_threshold:
             self.__is_dangerous = True
