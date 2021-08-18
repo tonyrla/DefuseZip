@@ -120,7 +120,7 @@ class Test_all:
             retval = True
         else:
             with tempfile.TemporaryDirectory() as tmpdir:
-                defusezip.safe_extract(tmpdir, max_cpu_time=60)
+                retval = defusezip.safe_extract(tmpdir, max_cpu_time=60)
                 dest = Path(tmpdir)
                 ex = any(dest.iterdir())
 
