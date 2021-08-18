@@ -44,7 +44,7 @@ class DefuseZip:
         self.__symlink_found: bool = False
 
         self.__compressed_size: int = self.__zip_file.stat().st_size
-        self.__ss: int = 0
+        self.__zipsize: int = 0
         self.__ratio: float = 0.00
         self.highest_level = 0
         self.nested_zips_count = 0
@@ -92,12 +92,12 @@ class DefuseZip:
                         self.highest_level = b
                     self.nested_zips_count = cur_count
                 else:
-                    self.__ss += zf.getinfo(f).file_size
+                    self.__zipsize += zf.getinfo(f).file_size
 
         return cur_count, toplevel
 
     @classmethod
-    def format_bytes(cls, bytes) -> str:
+    def format_bytes(cls, filesize_bytes: Union[int, float]) -> str:
         """
         :param bytes: int value of filesize in bytes
         :return: string representation of size (bytes to kb,mb,gb...)
@@ -112,10 +112,10 @@ class DefuseZip:
             5: "peta",
             6: "exa",
         }
-        while bytes >= 1024:
-            bytes /= 1024
+        while filesize_bytes >= 1024:
+            filesize_bytes /= 1024
             n += 1
-        return f"{bytes:.2f}" + " " + size_labels[n] + "bytes"
+        return f"{filesize_bytes:.2f}" + " " + size_labels[n] + "bytes"
 
     def is_dangerous(self) -> bool:
         return self.__is_dangerous
@@ -126,16 +126,12 @@ class DefuseZip:
     def has_links(self) -> bool:
         return self.__symlink_found
 
-    def scan(self) -> bool:
-        """
-        Scans the zip recursively and returns if the zip should be considered dangerous
-        :return: boolean
-        """
-        nested_zips_limit_reached = False
+    def _recursive_nested_zips_check(self):
+        """Scans the zip file for nested zips
 
-        if not self.__zip_file.exists():
-            raise FileNotFoundError
-
+        Returns:
+            bool: True if limit has been reached, False if not.
+        """
         with open(self.__zip_file, "rb") as f:
             zdata = io.BytesIO(f.read())
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -149,19 +145,23 @@ class DefuseZip:
                 self.__nested_zips_limit
                 and self.nested_zips_count > self.__nested_zips_limit
             ):
-                nested_zips_limit_reached = True
+                self.__nested_zips_limit_reached = True
+            else:
+                self.__nested_zips_limit_reached = False
 
-        try:
-            self.__ratio = self.__ss / self.__compressed_size
-        except ZeroDivisionError:
-            self.__ratio = 0.00
+    def __set_zip_status(self):
+        if self.__ratio > self.__ratio_threshold:
+            self.__is_dangerous = True
+        elif self.__nested_zips_limit_reached:
+            self.__is_dangerous = True
+        elif self.__killswitch:
+            self.__is_dangerous = True
+        elif (
+            not self.__symlinks_allowed and self.__symlink_found
+        ) or self.__directory_travelsal:
+            self.__is_dangerous = True
 
-        try:
-            self.__compressed_size_str = DefuseZip.format_bytes(self.__compressed_size)
-            self.__uncompressed_size_str = DefuseZip.format_bytes(self.__ss)
-
-        except KeyError:
-            self.__uncompressed_size_str = "TOO LARGE TO SHOW"
+    def __set_zip_output(self):
         if not self.__killswitch:
             self.__message = (
                 f"Aborted due to too deep recursion {self.highest_level}>{self.__nested_levels_limit})"
@@ -174,18 +174,11 @@ class DefuseZip:
                 "values collected are valid only to that point"
             )
 
-        self.__scan_completed = True
-        self.__is_dangerous = False
-        if self.__ratio > self.__ratio_threshold:
-            self.__is_dangerous = True
-        if nested_zips_limit_reached:
-            self.__is_dangerous = True
-        if self.__killswitch:
-            self.__is_dangerous = True
-        if (
-            not self.__symlinks_allowed and self.__symlink_found
-        ) or self.__directory_travelsal:
-            self.__is_dangerous = True
+        try:
+            self.__compressed_size_str = DefuseZip.format_bytes(self.__compressed_size)
+            self.__uncompressed_size_str = DefuseZip.format_bytes(self.__zipsize)
+        except KeyError:
+            self.__uncompressed_size_str = "TOO LARGE TO SHOW"
 
         self.__output = {
             "Message": self.__message,
@@ -200,6 +193,26 @@ class DefuseZip:
             "Symlinks": self.__symlink_found,
             "Directory travelsal": self.__directory_travelsal,
         }
+
+    def scan(self) -> bool:
+        """
+        Scans the zip recursively and returns if the zip should be considered dangerous
+        :return: boolean
+        """
+        if not self.__zip_file.exists():
+            raise FileNotFoundError
+
+        self._recursive_nested_zips_check()
+
+        try:
+            self.__ratio = self.__zipsize / self.__compressed_size
+        except ZeroDivisionError:
+            self.__ratio = 0.00
+
+        self.__scan_completed = True
+
+        self.__set_zip_status()
+        self.__set_zip_output()
 
         return self.__is_dangerous
 

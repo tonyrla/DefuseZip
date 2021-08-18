@@ -24,40 +24,40 @@ class Test_all:
 
     def test_LICENCE_no_travelsal(self):
         file = Path(__file__).parent / "example_zips" / "LICENSE.zip"
-        zip = DefuseZip(
+        defusezip = DefuseZip(
             file,
             nested_levels_limit=100,
             killswitch_seconds=5,
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        zip.scan()
-        assert not zip.has_travelsal()
+        defusezip.scan()
+        assert not defusezip.has_travelsal()
 
     def test_travelsal_dangerous(self):
         file = Path(__file__).parent / "example_zips" / "travelsal.zip"
-        zip = DefuseZip(
+        defusezip = DefuseZip(
             file,
             nested_levels_limit=100,
             killswitch_seconds=5,
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        zip.scan()
-        assert zip.is_dangerous()
+        defusezip.scan()
+        assert defusezip.is_dangerous()
 
     @pytest.mark.parametrize("filename,expected", testdata)
-    def test_is_safe(self, filename, expected):
+    def test_is_safe(self, filename: str, expected: bool):
         file = Path(__file__).parent / "example_zips" / filename
-        zip = DefuseZip(
+        defusezip = DefuseZip(
             file,
             nested_levels_limit=100,
             killswitch_seconds=5,
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        zip.scan()
-        assert zip.is_dangerous() == expected
+        defusezip.scan()
+        assert defusezip.is_dangerous() == expected
 
     testdata2 = [
         ("nonexistant.zip", FileNotFoundError, False),
@@ -65,13 +65,13 @@ class Test_all:
     ]
 
     @pytest.mark.parametrize("filename, expected, create", testdata2)
-    def test_not_found(self, filename, expected, create):
+    def test_not_found(self, filename: str, expected: bool, create: bool):
         zfile = Path(__file__).parent / "example_zips" / filename
         if create:
             cp = Path(zfile.parent / "single.zip")
             copy(cp, zfile)
         with pytest.raises(FileNotFoundError):
-            zip = DefuseZip(
+            defusezip = DefuseZip(
                 zfile,
                 nested_levels_limit=100,
                 killswitch_seconds=5,
@@ -80,19 +80,19 @@ class Test_all:
             )
             if create:
                 zfile.unlink()
-            zip.scan()
+            defusezip.scan()
 
     def test_output_safe(self, capsys):
         file = Path(__file__).parent / "example_zips" / "LICENSE.zip"
-        zip = DefuseZip(
+        defusezip = DefuseZip(
             file,
             nested_levels_limit=100,
             killswitch_seconds=5,
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        zip.scan()
-        zip.output()
+        defusezip.scan()
+        defusezip.output()
         captured = capsys.readouterr()
 
         assert "Dangerous = False" in captured.out
@@ -102,16 +102,16 @@ class Test_all:
             assert True
             return True
         file = Path(__file__).parent / "example_zips" / "single.zip"
-        zip = DefuseZip(
+        defusezip = DefuseZip(
             file,
             nested_levels_limit=100,
             killswitch_seconds=5,
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        zip.scan()
+        defusezip.scan()
         with tempfile.TemporaryDirectory() as tmpdir:
-            zip.safe_extract(tmpdir, max_cpu_time=60)
+            defusezip.safe_extract(tmpdir, max_cpu_time=60)
             dest = Path(tmpdir)
             ex = any(dest.iterdir())
 
@@ -119,15 +119,15 @@ class Test_all:
 
     def test_output_dangerous(self, capsys):
         file = Path(__file__).parent / "example_zips" / "travelsal.zip"
-        zip = DefuseZip(
+        defusezip = DefuseZip(
             file,
             nested_levels_limit=100,
             killswitch_seconds=5,
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        zip.scan()
-        zip.output()
+        defusezip.scan()
+        defusezip.output()
         captured = capsys.readouterr()
 
         assert "Dangerous = True" in captured.out
@@ -137,7 +137,7 @@ class Test_all:
             assert True
             return True
         file = Path(__file__).parent / "example_zips" / "travelsal.zip"
-        zip = DefuseZip(
+        defusezip = DefuseZip(
             file,
             nested_levels_limit=100,
             killswitch_seconds=5,
@@ -145,7 +145,7 @@ class Test_all:
             ratio_threshold=1032,
         )
         with pytest.raises(Exception):
-            zip.safe_extract(Path.cwd())
+            defusezip.safe_extract(Path.cwd())
 
     def test_extract_deleted_file(self, capsys):
         if sys.platform == "win32":
@@ -155,15 +155,15 @@ class Test_all:
 
         cp = Path(zfile.parent / "single.zip")
         copy(cp, zfile)
-        zip = DefuseZip(
+        defusezip = DefuseZip(
             zfile,
             nested_levels_limit=100,
             killswitch_seconds=5,
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        zip.scan()
+        defusezip.scan()
         zfile.unlink()
         with pytest.raises(FileNotFoundError):
             with tempfile.TemporaryDirectory() as tmpdir:
-                zip.safe_extract(Path(tmpdir))
+                defusezip.safe_extract(Path(tmpdir))
