@@ -2,6 +2,7 @@
 ![Build Status](https://github.com/kuviokelluja/DefuseZip/actions/workflows/pytest_and_flake8.yml/badge.svg)
 [![codefactor](https://www.codefactor.io/repository/github/kuviokelluja/defusezip/badge/main)](https://www.codefactor.io/repository/github/kuviokelluja/defusezip/overview/main)
 ![Mypy](https://github.com/kuviokelluja/DefuseZip/actions/workflows/mypy.yml/badge.svg)
+[![codecov](https://codecov.io/gh/kuviokelluja/DefuseZip/branch/main/graph/badge.svg?token=AFSWTF0QBX)](https://codecov.io/gh/kuviokelluja/DefuseZip)
 
 ----
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/kuviokelluja/DefuseZip)
