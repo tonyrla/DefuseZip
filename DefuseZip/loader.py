@@ -1,9 +1,15 @@
-from pathlib import PosixPath, WindowsPath, Path
-from typing import Union, Dict, Any, Tuple
-from zipfile import ZipFile
-import psutil  # type: ignore
-import io
 import concurrent.futures
+import io
+from pathlib import Path
+from pathlib import PosixPath
+from pathlib import WindowsPath
+from typing import Any
+from typing import Dict
+from typing import Tuple
+from typing import Union
+from zipfile import ZipFile
+
+import psutil  # type: ignore
 
 
 class DefuseZip:
@@ -117,13 +123,13 @@ class DefuseZip:
             n += 1
         return f"{filesize_bytes:.2f}" + " " + size_labels[n] + "bytes"
 
-    def is_dangerous(self) -> bool:
+    def is_dangerous(self) -> bool:  # dead: disable
         return self.__is_dangerous
 
-    def has_travelsal(self) -> bool:
+    def has_travelsal(self) -> bool:  # dead: disable
         return self.__directory_travelsal
 
-    def has_links(self) -> bool:
+    def has_links(self) -> bool:  # dead: disable
         return self.__symlink_found  # pragma: no cover
 
     def _recursive_nested_zips_check(self):
@@ -225,9 +231,9 @@ class DefuseZip:
         if len(self.__output) <= 0:
             print("You need to run .is_dangerous() first")  # pragma: no cover
         for k, v in self.__output.items():
-            print("\t{} = {}".format(k, v))
+            print(f"\t{k} = {v}")
 
-    def get_compression_ratio(self):
+    def get_compression_ratio(self):  # dead: disable
         """
         Returns the zip's compression ratio rounded to 2 decimals
         :return: str

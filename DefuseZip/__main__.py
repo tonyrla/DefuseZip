@@ -1,11 +1,12 @@
-from pathlib import Path
-from argparse import ArgumentParser
 import sys
+from argparse import ArgumentParser
+from pathlib import Path
+
 from DefuseZip.loader import DefuseZip
 
 
 class ArgParser(ArgumentParser):
-    def error(self, message):
+    def error(self, message):  # dead: disable
         print(message)
         self.print_help()
         sys.exit(1)
