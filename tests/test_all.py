@@ -1,9 +1,11 @@
-from DefuseZip.loader import DefuseZip
+import sys
 import tempfile
 from pathlib import Path
-import pytest
-import sys
 from shutil import copy
+
+import pytest
+
+from DefuseZip.loader import DefuseZip
 
 
 class Test_all:
