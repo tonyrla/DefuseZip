@@ -48,7 +48,5 @@ repos:
     hooks:
       - id: flake8
         name: flake8
-        entry: flake8
-        language: system
         types: [ python ]
         files: ^(DefuseZip/)|^(tests/)
