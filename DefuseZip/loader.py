@@ -1,3 +1,4 @@
+# TODO: Collect symlinks etc to output
 import concurrent.futures
 import io
 from pathlib import Path
@@ -9,7 +10,10 @@ from typing import Tuple
 from typing import Union
 from zipfile import ZipFile
 
-import psutil  # type: ignore
+import psutil
+from loguru import logger
+
+from DefuseZip.utils.managers import set_rlimit  # type: ignore
 
 
 class DefuseZip:
@@ -63,6 +67,15 @@ class DefuseZip:
     def __recursive_zips(
         self, zip_bytes: io.BytesIO, level: int = 0
     ) -> Tuple[int, int]:
+        """[summary]
+
+        Args:
+            zip_bytes (io.BytesIO): [description]
+            level (int, optional): [description]. Defaults to 0.
+
+        Returns:
+            Tuple[int, int]: [description]
+        """
 
         if (
             self.__nested_zips_limit
@@ -83,10 +96,10 @@ class DefuseZip:
                 if "..\\" in f or "../" in f:
                     self.__directory_travelsal = True
                     continue
-                # else:
-                #    if Path(f).is_symlink():
-                #        self.__symlink_found = True
-                #        continue
+                else:
+                    if psutil.LINUX and Path(f).is_symlink():
+                        self.__symlink_found = True
+                        continue
 
                 if f.endswith(".zip"):
                     cur_count += 1
@@ -104,10 +117,15 @@ class DefuseZip:
 
     @classmethod
     def format_bytes(cls, filesize_bytes: Union[int, float]) -> str:
+        """[summary]
+
+        Args:
+            filesize_bytes (Union[int, float]): int value of filesize in bytes
+
+        Returns:
+            str: string representation of size (bytes to kb,mb,gb...)
         """
-        :param bytes: int value of filesize in bytes
-        :return: string representation of size (bytes to kb,mb,gb...)
-        """
+
         n = 0
         size_labels = {
             0: "",
@@ -123,13 +141,16 @@ class DefuseZip:
             n += 1
         return f"{filesize_bytes:.2f}" + " " + size_labels[n] + "bytes"
 
-    def is_dangerous(self) -> bool:  # dead: disable
+    @property  # dead: disable
+    def is_dangerous(self) -> bool:
         return self.__is_dangerous
 
-    def has_travelsal(self) -> bool:  # dead: disable
+    @property  # dead: disable
+    def has_travelsal(self) -> bool:
         return self.__directory_travelsal
 
-    def has_links(self) -> bool:  # dead: disable
+    @property  # dead: disable
+    def has_links(self) -> bool:
         return self.__symlink_found  # pragma: no cover
 
     def _recursive_nested_zips_check(self):
@@ -156,6 +177,7 @@ class DefuseZip:
                 self.__nested_zips_limit_reached = False  # pragma: no cover
 
     def __set_zip_status(self):
+        """[summary]"""
         if self.__ratio > self.__ratio_threshold:
             self.__is_dangerous = True
         elif self.__nested_zips_limit_reached:
@@ -168,6 +190,7 @@ class DefuseZip:
             self.__is_dangerous = True
 
     def __set_zip_output(self):
+        """[summary]"""
         if not self.__killswitch:
             self.__message = (
                 f"Aborted due to too deep recursion {self.highest_level}>{self.__nested_levels_limit})"
@@ -229,9 +252,12 @@ class DefuseZip:
         """
         self.raise_for_exception()  # pragma: no cover
         if len(self.__output) <= 0:
-            print("You need to run .is_dangerous() first")  # pragma: no cover
+            raise Exception(
+                "You need to run a scan first, to get output"
+            )  # pragma: no cover
+
         for k, v in self.__output.items():
-            print(f"\t{k} = {v}")
+            logger.info(f"\t{k} = {v}")
 
     def get_compression_ratio(self):  # dead: disable
         """
@@ -263,32 +289,17 @@ class DefuseZip:
         if not self.__zip_file.exists():  # pragma: no cover
             raise FileNotFoundError
         if psutil.LINUX:  # pragma: no cover
-            process = psutil.Process()
-            default_cpu = process.rlimit(psutil.RLIMIT_CPU)
-            default_memory = process.rlimit(psutil.RLIMIT_AS)
-            default_filesize = process.rlimit(psutil.RLIMIT_FSIZE)
 
             with ZipFile(self.__zip_file, "r") as zip_ref:
                 if zip_ref.testzip():
                     return False
 
-                process.rlimit(psutil.RLIMIT_CPU, (max_cpu_time, max_cpu_time))
-                process.rlimit(psutil.RLIMIT_AS, (max_memory, max_memory))
-                process.rlimit(psutil.RLIMIT_FSIZE, (max_filesize, max_filesize))
-                zip_ref.extractall(destination_path)
-                try:
-                    process.rlimit(psutil.RLIMIT_CPU, default_cpu)
-                    process.rlimit(psutil.RLIMIT_AS, default_memory)
-                    process.rlimit(psutil.RLIMIT_FSIZE, default_filesize)
-                except Exception:
-                    pass
+                with set_rlimit(max_cpu_time, max_memory, max_filesize):
+                    zip_ref.extractall(destination_path)
         else:
             raise NotImplementedError(
-                "Safe_extract not implemented for Windows"
+                "Safe_extract not implemented only for Linux"
             )  # pragma: no cover
-        # except OSError as e:
-        #    print('oserror:', str(e))
-        #    return False
 
         return True  # pragma: no cover
 

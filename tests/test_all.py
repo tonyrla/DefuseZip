@@ -34,7 +34,7 @@ class Test_all:
             ratio_threshold=1032,
         )
         defusezip.scan()
-        assert not defusezip.has_travelsal()
+        assert not defusezip.has_travelsal
 
     def test_travelsal_dangerous(self):
         file = Path(__file__).parent / "example_zips" / "travelsal.zip"
@@ -46,7 +46,7 @@ class Test_all:
             ratio_threshold=1032,
         )
         defusezip.scan()
-        assert defusezip.is_dangerous()
+        assert defusezip.is_dangerous
 
     @pytest.mark.parametrize("filename,expected", testdata)
     def test_is_safe(self, filename: str, expected: bool):
@@ -59,7 +59,7 @@ class Test_all:
             ratio_threshold=1032,
         )
         defusezip.scan()
-        assert defusezip.is_dangerous() == expected
+        assert defusezip.is_dangerous == expected
 
     testdata2 = [
         ("nonexistant.zip", FileNotFoundError, False),
@@ -84,7 +84,7 @@ class Test_all:
                 zfile.unlink()
             defusezip.scan()
 
-    def test_output_safe(self, capsys):
+    def test_output_safe(self, caplog):
         file = Path(__file__).parent / "example_zips" / "LICENSE.zip"
         defusezip = DefuseZip(
             file,
@@ -95,9 +95,8 @@ class Test_all:
         )
         defusezip.scan()
         defusezip.output()
-        captured = capsys.readouterr()
 
-        assert "Dangerous = False" in captured.out
+        assert "Dangerous = False" in caplog.text
 
     def test_safe_extract(self):
         file = Path(__file__).parent / "example_zips" / "single.zip"
@@ -129,7 +128,7 @@ class Test_all:
         assert ex
         assert retval
 
-    def test_output_dangerous(self, capsys):
+    def test_output_dangerous(self, caplog):
         file = Path(__file__).parent / "example_zips" / "travelsal.zip"
         defusezip = DefuseZip(
             file,
@@ -140,11 +139,10 @@ class Test_all:
         )
         defusezip.scan()
         defusezip.output()
-        captured = capsys.readouterr()
 
-        assert "Dangerous = True" in captured.out
+        assert "Dangerous = True" in caplog.text
 
-    def test_no_scan(self, capsys):
+    def test_no_scan(self):
         if sys.platform == "win32":
             assert True
             return True
@@ -159,7 +157,7 @@ class Test_all:
         with pytest.raises(Exception):
             defusezip.safe_extract(Path.cwd())
 
-    def test_extract_deleted_file(self, capsys):
+    def test_extract_deleted_file(self):
         if sys.platform == "win32":
             assert True
             return True

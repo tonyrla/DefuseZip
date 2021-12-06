@@ -2,6 +2,9 @@ import sys
 from argparse import ArgumentParser
 from pathlib import Path
 
+import psutil
+from loguru import logger
+
 from DefuseZip.loader import DefuseZip
 
 
@@ -14,6 +17,12 @@ class ArgParser(ArgumentParser):
 
 args = ArgParser(description="")
 args.add_argument("--file", "-f", type=str, help="Path to zip")
+args.add_argument(
+    "logtofile",
+    default=False,
+    action="store_true",
+    help="Log output to file",
+)
 args.add_argument(
     "--ratio_threshold",
     "-rt",
@@ -88,6 +97,7 @@ if "--safe_extract" in sys.argv or "-se" in sys.argv:
 
 opts = args.parse_args()
 filename = None
+
 if not opts.file:
     args.print_help()
     sys.exit(1)
@@ -96,10 +106,27 @@ else:
     if not filename.exists():
         print(f"File not found: {opts.file}")
         sys.exit(1)
-
+if opts.logtofile:
+    logger.add(
+        Path("logs") / (filename.name + ".log"),
+        encoding="utf8",
+        serialize=False,
+        level="INFO",
+        enqueue=True,
+        backtrace=True,
+        diagnose=True,
+        catch=True,
+    )
 if opts.safe_extract and not opts.destination:
     print("--destination PATH required with --safe_extract")
     sys.exit(1)
+
+if opts.safe_extract and not psutil.LINUX:
+    raise NotImplementedError("Only implemented for Linux OS")
+
+if opts.symlinks_allowed and not psutil.LINUX:
+    raise NotImplementedError("Only implemented for Linux OS")
+
 
 zip = DefuseZip(
     filename,

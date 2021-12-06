@@ -12,10 +12,14 @@
 
 
 ## Table of contents
-* [Description and general info](#description--general-info)
-   * [Installation](#installation)
-   * [Usage](#usage)
-   * [Example output](#example-output-from-output-after-calling-scan---bool)
+- [DefuseZip](#defusezip)
+  - [Table of contents](#table-of-contents)
+  - [Description / General info](#description--general-info)
+    - [Installation:](#installation)
+    - [Usage:](#usage)
+      - [DefuseZip.Loader parameters:](#defuseziploader-parameters)
+      - [Loader methods:](#loader-methods)
+    - [Example output from output() after calling scan() -> bool](#example-output-from-output-after-calling-scan---bool)
 
 ## Description / General info
 I couldn't find an opensource ZipBomb blocker, so this is my attempt at making one.
@@ -36,7 +40,7 @@ pip install DefuseZip
 * [OPTIONAL] nested_zips_limit: Total zip count when to abort and rule the zip malicious. Default = 3
 * [OPTIONAL] nested_levels_limit: Limit when to abort travelling the zips and rule the zip malicious. Default = 2
 * [OPTIONAL] killswitch_seconds: Seconds to allow traversing the zip. After the limit is hit, zip is ruled malicious. Default = 1
-* [OPTIONAL] symlinks_allowed: Boolean. Default = False
+* [OPTIONAL] symlinks_allowed: Boolean. Default = False, Linux only atm
 * [OPTIONAL] directory_travelsal_allowed: Boolean. Default = False
 
 #### Loader methods:
