@@ -22,5 +22,6 @@ setup(
     author_email='rintala.tony@gmail.com',
     url='https://github.com/kuviokelluja/DefuseZip',
     packages=['DefuseZip'],
-    install_requires=['psutil', 'loguru'],
+    install_requires=['psutil==5.8.0', 'loguru==0.5.3'],
+    python_requires=">=3.7",
 )

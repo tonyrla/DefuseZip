@@ -4,9 +4,13 @@
 [![codefactor](https://www.codefactor.io/repository/github/kuviokelluja/defusezip/badge/main)](https://www.codefactor.io/repository/github/kuviokelluja/defusezip/overview/main)
 [![codecov](https://codecov.io/gh/kuviokelluja/DefuseZip/branch/main/graph/badge.svg?token=AFSWTF0QBX)](https://codecov.io/gh/kuviokelluja/DefuseZip)
 
+
 ----
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/kuviokelluja/DefuseZip)
 ![GitHub issues](https://img.shields.io/github/issues-raw/kuviokelluja/DefuseZip)
+
+----
+![pypiversion](https://img.shields.io/pypi/v/DefuseZip)
 
 ----
 
