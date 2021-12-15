@@ -1,5 +1,6 @@
 import re
 
+from setuptools import find_packages
 from setuptools import setup
 
 
@@ -21,7 +22,10 @@ setup(
     author='Tony Rintala',
     author_email='rintala.tony@gmail.com',
     url='https://github.com/kuviokelluja/DefuseZip',
-    packages=['DefuseZip'],
+    packages=find_packages(include=['DefuseZip','DefuseZip.*']),
     install_requires=['psutil==5.8.0', 'loguru==0.5.3'],
     python_requires=">=3.7",
+    entry_points={
+        'console_scripts': ['DefuseZip=DefuseZip.__main__:main']
+    }
 )
