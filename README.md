@@ -21,8 +21,8 @@
   - [Description / General info](#description--general-info)
     - [Installation:](#installation)
     - [Usage:](#usage)
-      - [DefuseZip.Loader parameters:](#defuseziploader-parameters)
-      - [Loader methods:](#loader-methods)
+      - [Command line](#command-line)
+      - [Python import](#python-import)
     - [Example output from output() after calling scan() -> bool](#example-output-from-output-after-calling-scan---bool)
 
 ## Description / General info
@@ -38,7 +38,14 @@ They are malicious by intent and only for testing purposes.
 pip install DefuseZip
 ```
 ### Usage:
-#### DefuseZip.Loader parameters:
+
+#### Command line
+
+* DefuseZip --help
+
+* python -m DefuseZip --help
+#### Python import
+DefuseZip arguments
 * [REQUIRED] zip_file: Path to zip
 * [OPTIONAL] ratio_threshold: compression ratio threshold when to rule the zip malicious. Default = 1032
 * [OPTIONAL] nested_zips_limit: Total zip count when to abort and rule the zip malicious. Default = 3
@@ -47,17 +54,17 @@ pip install DefuseZip
 * [OPTIONAL] symlinks_allowed: Boolean. Default = False, Linux only atm
 * [OPTIONAL] directory_travelsal_allowed: Boolean. Default = False
 
-#### Loader methods:
+DefuseZip methods:
 * is_dangerous() -> bool
 * has_travelsal() -> bool
 * has_links() -> bool
 
 ```
 from pathlib import Path
-import DefuseZip
+from DefuseZip.loader import DefuseZip
 
 file = Path('myzip.zip')
-zip = DefuseZip.Loader(zip_file=file)
+zip = DefuseZip(zip_file=file)
 if zip.scan() and zip.get_compression_ratio() > 1032:
     print(zip.output())
 else:
