@@ -6,6 +6,7 @@ from shutil import copy
 import pytest
 
 from DefuseZip.loader import DefuseZip
+from DefuseZip.loader import MaliciousFileException
 
 
 class Test_all:
@@ -45,7 +46,8 @@ class Test_all:
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        defusezip.scan()
+        with pytest.raises(MaliciousFileException):
+            defusezip.scan()
         assert defusezip.is_dangerous
 
     @pytest.mark.parametrize("filename,expected", testdata)
@@ -58,7 +60,11 @@ class Test_all:
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        defusezip.scan()
+        try:
+            defusezip.scan()
+        except MaliciousFileException:
+            pass
+
         assert defusezip.is_dangerous == expected
 
     testdata2 = [
@@ -137,15 +143,13 @@ class Test_all:
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        defusezip.scan()
+        with pytest.raises(MaliciousFileException):
+            defusezip.scan()
         defusezip.output()
 
         assert "Dangerous = True" in caplog.text
 
     def test_no_scan(self):
-        if sys.platform == "win32":
-            assert True
-            return True
         file = Path(__file__).parent / "example_zips" / "travelsal.zip"
         defusezip = DefuseZip(
             file,
@@ -158,9 +162,6 @@ class Test_all:
             defusezip.safe_extract(Path.cwd())
 
     def test_extract_deleted_file(self):
-        if sys.platform == "win32":
-            assert True
-            return True
         zfile = Path(__file__).parent / "example_zips" / "deleted.zip"
 
         cp = Path(zfile.parent / "single.zip")
@@ -177,3 +178,8 @@ class Test_all:
         with pytest.raises(FileNotFoundError):
             with tempfile.TemporaryDirectory() as tmpdir:
                 defusezip.safe_extract(Path(tmpdir))
+
+    def test_extract_all(self, tmpdir):
+        zfile = Path(__file__).parent / "example_zips" / "single.zip"
+        defusezip = DefuseZip(zfile)
+        assert defusezip.extract_all(tmpdir)

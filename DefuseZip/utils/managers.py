@@ -1,7 +1,7 @@
 import psutil
 
 
-class set_rlimit:
+class set_rlimit:  # pragma: no cover
     def __init__(self, max_cpu_time: int, max_memory: int, max_filesize: int):
         self.process = psutil.Process()
         self.default_cpu = self.process.rlimit(psutil.RLIMIT_CPU)

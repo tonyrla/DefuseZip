@@ -1,11 +1,14 @@
 import sys
+import zipfile
 from argparse import ArgumentParser
 from pathlib import Path
+from typing import List
 
 import psutil
 from loguru import logger
 
 from DefuseZip.loader import DefuseZip
+from DefuseZip.loader import MaliciousFileException
 
 
 class ArgParser(ArgumentParser):
@@ -23,6 +26,12 @@ def main():
         default=False,
         action="store_true",
         help="Log output to file",
+    )
+    args.add_argument(
+        "--version",
+        "-v",
+        dest="vercheck",
+        action="store_true",
     )
     args.add_argument(
         "--ratio_threshold",
@@ -75,9 +84,9 @@ def main():
         help="Toggle to attempt extracting",
     )
 
+    args.add_argument("--destination", "-d", type=str, help="Target directory")
     if "--safe_extract" in sys.argv or "-se" in sys.argv:
         group = args.add_argument_group(description="Arguments for --safe_extract")
-        group.add_argument("--destination", "-d", type=str, help="Target directory")
         group.add_argument(
             "--max_cpu_time",
             "-mc",
@@ -103,13 +112,20 @@ def main():
     opts = args.parse_args()
     filename = None
 
+    if opts.vercheck:
+
+        from DefuseZip import __version__
+
+        print(f"DefuseZip v{__version__}")
+        raise SystemExit(1)
+
     if not opts.file:
         args.print_help()
         raise SystemExit(1)
     else:
         filename = Path(opts.file)
         if not filename.exists():
-            print(f"File not found: {opts.file}")
+            print(f"File/Folder not found: {opts.file}")
             raise SystemExit(1)
     if opts.logtofile:
         logger.add(
@@ -132,24 +148,43 @@ def main():
     if opts.symlinks_allowed and not psutil.LINUX:
         raise NotImplementedError("Only implemented for Linux OS")
 
-    zip = DefuseZip(
-        filename,
-        opts.ratio_threshold,
-        opts.nested_zips_limit,
-        opts.nested_levels_limit,
-        opts.killswitch_seconds,
-        opts.symlinks_allowed,
-        opts.directory_travelsal_allowed,
-    )
-    zip.scan()
-    zip.output()
+    files: List[Path] = []
+    if filename.is_file():
+        files.append(filename)
+    else:
+        for f in filename.rglob("**/*"):
+            if zipfile.is_zipfile(f):
+                files.append(f)
 
-    if opts.safe_extract:
-        target_path = Path(opts.destination)
+    for file in files:
 
-        zip.safe_extract(
-            target_path, opts.max_cpu_time, opts.max_memory, opts.max_filesize
+        zip = DefuseZip(
+            file,
+            opts.ratio_threshold,
+            opts.nested_zips_limit,
+            opts.nested_levels_limit,
+            opts.killswitch_seconds,
+            opts.symlinks_allowed,
+            opts.directory_travelsal_allowed,
         )
+        try:
+            zip.scan()
+        except MaliciousFileException:
+            sys.tracebacklimit = 0
+            if opts.safe_extract:
+                pass
+
+        zip.output()
+
+        if opts.safe_extract:
+            target_path = Path(opts.destination)
+
+            zip.safe_extract(
+                target_path, opts.max_cpu_time, opts.max_memory, opts.max_filesize
+            )
+        else:
+            if opts.destination and not zip.is_dangerous:
+                zip.extract_all(Path(opts.destination) / Path(file).stem)
 
     return 0
 
