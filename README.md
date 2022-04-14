@@ -3,6 +3,7 @@
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/pre-commit/pre-commit/master.svg)](https://results.pre-commit.ci/latest/github/kuviokelluja/DefuseZip/main)
 [![codefactor](https://www.codefactor.io/repository/github/kuviokelluja/defusezip/badge/main)](https://www.codefactor.io/repository/github/kuviokelluja/defusezip/overview/main)
 [![codecov](https://codecov.io/gh/kuviokelluja/DefuseZip/branch/main/graph/badge.svg?token=AFSWTF0QBX)](https://codecov.io/gh/kuviokelluja/DefuseZip)
+![codeql-analysis](https://github.com/kuviokelluja/DefuseZip/actions/workflows/codeql-analysis.yml/badge.svg)
 
 
 ----
