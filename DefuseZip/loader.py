@@ -181,13 +181,13 @@ class DefuseZip:
     def is_dangerous(self) -> bool:
         return self.__is_dangerous
 
-    @property  # dead: disable
+    @property
     def has_travelsal(self) -> bool:
         return self.__directory_travelsal
 
-    @property  # dead: disable
+    @property
     def has_links(self) -> bool:
-        return self.__symlink_found  # pragma: no cover
+        return self.__symlink_found
 
     def _recursive_nested_zips_check(self):
         """Scans the zip file for nested zips
@@ -248,15 +248,15 @@ class DefuseZip:
 
         self.__output = {
             "Message": self.__message,
-            "Dangerous": self.__is_dangerous,
+            "Dangerous": self.is_dangerous,
             "Compression ratio": f"{self.__ratio:.2f}"
             + " Compressed size: "
             + self.__compressed_size_str,
             "Uncompressed size": self.__uncompressed_size_str,
             "Nested zips": self.nested_zips_count,
             "Nested levels": self.highest_level,
-            "Symlinks": self.__symlink_found,
-            "Directory travelsal": self.__directory_travelsal,
+            "Symlinks": self.has_links,
+            "Directory travelsal": self.has_travelsal,
         }
 
     def scan(self) -> bool:
