@@ -122,19 +122,7 @@ def parse_arguments():
     return opts
 
 
-def launch(opts: Namespace):
-    filename = None
-
-    if opts.vercheck:
-        from DefuseZip import __version__
-
-        print(f"DefuseZip v{__version__}")
-        raise SystemExit(1)
-
-    filename = Path(opts.file)
-    if not filename.exists():
-        print(f"File/Folder not found: {opts.file}")
-        raise SystemExit(1)
+def verify_options(opts: Namespace, filename: Path):
     if opts.logtofile:
         logger.add(
             Path("logs") / (filename.name + ".log"),
@@ -156,14 +144,34 @@ def launch(opts: Namespace):
     if opts.symlinks_allowed and not psutil.LINUX:
         raise NotImplementedError("Only implemented for Linux OS")
 
+
+def launch(opts: Namespace) -> int:
+    filename = None
+
+    if opts.vercheck:
+        from DefuseZip import __version__
+
+        print(f"DefuseZip v{__version__}")
+        raise SystemExit(1)
+
+    filename = Path(opts.file)
+    if not filename.exists():
+        print(f"File/Folder not found: {opts.file}")
+        raise SystemExit(1)
+
+    verify_options(opts, filename)
+
     files: List[Path] = []
     if filename.is_file():
         files.append(filename)
     else:
-        for f in filename.rglob("**/*"):
+        for f in filename.glob("*.*"):
             if zipfile.is_zipfile(f):
                 files.append(f)
+    return scan_files(files, opts)
 
+
+def scan_files(files: List[Path], opts: Namespace) -> int:
     for file in files:
 
         zip = DefuseZip(

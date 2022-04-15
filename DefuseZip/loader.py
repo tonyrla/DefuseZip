@@ -1,4 +1,3 @@
-# TODO: Collect symlinks etc to output
 import concurrent.futures
 import io
 import sys
