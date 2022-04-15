@@ -133,7 +133,7 @@ class DefuseZip:
                     self.__directory_travelsal = True
                     continue
                 else:
-                    if psutil.LINUX and Path(f).is_symlink():
+                    if psutil.LINUX and Path(f).is_symlink():  # pragma: no cover
                         self.__symlink_found = True
                         continue
 
@@ -351,7 +351,7 @@ class DefuseZip:
                 "You have to complete a scan before using other methods"
             )  # pragma: no cover
 
-    def extract_all(self, path: Optional[Path]) -> bool:
+    def extract_all(self, path: Optional[Path]) -> bool:  # pragma: no cover
         if path:
             path = Path(path).resolve()
         logger.info(path)

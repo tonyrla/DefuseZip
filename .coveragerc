@@ -7,6 +7,8 @@ omit =
         DefuseZip/__init__.py
 		tests/test_all.py
 		setup.py
+        conftest.py
+        managers.py
 
 [report]
 # Regexes for lines to exclude from consideration
