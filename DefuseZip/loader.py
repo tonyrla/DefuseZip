@@ -1,15 +1,54 @@
 import concurrent.futures
 import io
+import sys
+from functools import partialmethod
 from pathlib import Path
 from pathlib import PosixPath
 from pathlib import WindowsPath
 from typing import Any
 from typing import Dict
+from typing import Optional
 from typing import Tuple
 from typing import Union
 from zipfile import ZipFile
 
-import psutil  # type: ignore
+import psutil
+from loguru import logger
+
+from DefuseZip.utils.managers import set_rlimit  # type: ignore
+
+logger.remove()
+logger = logger.opt(depth=-1)
+logger.level("malicious", no=50, icon="❌", color="<red>")
+logger.level("safe", no=50, icon="✔️", color="<green>")
+logger.add(
+    sys.stderr,
+    colorize=True,
+    filter=lambda record: all(
+        level not in record["level"].name for level in ["malicious", "safe"]
+    ),
+)
+logger.add(
+    sys.stderr,
+    colorize=True,
+    filter=lambda record: "file" in record["extra"]
+    and "malicious" in record["level"].name,
+    format="<green>{time:YYYY-MM-DD HH:mm:SS}</green> <white>|</white> <red>{level: <9} </red><white>|</white> <red>{extra[file]: <20}</red> <white>|</white> {level.icon: <3} {message}",
+    level="malicious",
+)
+logger.add(
+    sys.stderr,
+    colorize=True,
+    filter=lambda record: "file" in record["extra"] and "safe" in record["level"].name,
+    format="<green>{time:YYYY-MM-DD HH:mm:SS}</green> <white>|</white> <white>{level: <9} </white><white>|</white> <white>{extra[file]: <20}</white> <white>|</white> {level.icon: <3} {message}",
+    level="malicious",
+)
+logger.__class__.malicious = partialmethod(logger.__class__.log, "malicious")
+logger.__class__.safe = partialmethod(logger.__class__.log, "safe")
+
+
+class MaliciousFileException(Exception):
+    ...
 
 
 class DefuseZip:
@@ -42,12 +81,13 @@ class DefuseZip:
         self.__symlinks_allowed = symlinks_allowed
         self.__nested_levels_limit = nested_levels_limit
         self.__zip_file = zip_file
-        self.__directory_travelsal = directory_travelsal_allowed
+        self.__directory_travelsal_allowed = directory_travelsal_allowed
 
         self.__scan_completed: bool = False
         self.__is_dangerous: bool = False
         self.__killswitch: bool = False
         self.__symlink_found: bool = False
+        self.__directory_travelsal = False
 
         self.__compressed_size: int = self.__zip_file.stat().st_size
         self.__zipsize: int = 0
@@ -63,6 +103,15 @@ class DefuseZip:
     def __recursive_zips(
         self, zip_bytes: io.BytesIO, level: int = 0
     ) -> Tuple[int, int]:
+        """[summary]
+
+        Args:
+            zip_bytes (io.BytesIO): [description]
+            level (int, optional): [description]. Defaults to 0.
+
+        Returns:
+            Tuple[int, int]: [description]
+        """
 
         if (
             self.__nested_zips_limit
@@ -83,10 +132,10 @@ class DefuseZip:
                 if "..\\" in f or "../" in f:
                     self.__directory_travelsal = True
                     continue
-                # else:
-                #    if Path(f).is_symlink():
-                #        self.__symlink_found = True
-                #        continue
+                else:
+                    if psutil.LINUX and Path(f).is_symlink():  # pragma: no cover
+                        self.__symlink_found = True
+                        continue
 
                 if f.endswith(".zip"):
                     cur_count += 1
@@ -104,10 +153,15 @@ class DefuseZip:
 
     @classmethod
     def format_bytes(cls, filesize_bytes: Union[int, float]) -> str:
+        """[summary]
+
+        Args:
+            filesize_bytes (Union[int, float]): int value of filesize in bytes
+
+        Returns:
+            str: string representation of size (bytes to kb,mb,gb...)
         """
-        :param bytes: int value of filesize in bytes
-        :return: string representation of size (bytes to kb,mb,gb...)
-        """
+
         n = 0
         size_labels = {
             0: "",
@@ -123,14 +177,17 @@ class DefuseZip:
             n += 1
         return f"{filesize_bytes:.2f}" + " " + size_labels[n] + "bytes"
 
-    def is_dangerous(self) -> bool:  # dead: disable
+    @property
+    def is_dangerous(self) -> bool:
         return self.__is_dangerous
 
-    def has_travelsal(self) -> bool:  # dead: disable
+    @property
+    def has_travelsal(self) -> bool:
         return self.__directory_travelsal
 
-    def has_links(self) -> bool:  # dead: disable
-        return self.__symlink_found  # pragma: no cover
+    @property
+    def has_links(self) -> bool:
+        return self.__symlink_found
 
     def _recursive_nested_zips_check(self):
         """Scans the zip file for nested zips
@@ -138,6 +195,7 @@ class DefuseZip:
         Returns:
             bool: True if limit has been reached, False if not.
         """
+
         with open(self.__zip_file, "rb") as f:
             zdata = io.BytesIO(f.read())
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -156,18 +214,20 @@ class DefuseZip:
                 self.__nested_zips_limit_reached = False  # pragma: no cover
 
     def __set_zip_status(self):
+        """[summary]"""
         if self.__ratio > self.__ratio_threshold:
             self.__is_dangerous = True
         elif self.__nested_zips_limit_reached:
             self.__is_dangerous = True  # pragma: no cover
         elif self.__killswitch:
             self.__is_dangerous = True  # pragma: no cover
-        elif (
-            not self.__symlinks_allowed and self.__symlink_found
-        ) or self.__directory_travelsal:
+        elif (not self.__symlinks_allowed and self.__symlink_found) or (
+            self.__directory_travelsal and not self.__directory_travelsal_allowed
+        ):
             self.__is_dangerous = True
 
     def __set_zip_output(self):
+        """[summary]"""
         if not self.__killswitch:
             self.__message = (
                 f"Aborted due to too deep recursion {self.highest_level}>{self.__nested_levels_limit})"
@@ -188,21 +248,21 @@ class DefuseZip:
 
         self.__output = {
             "Message": self.__message,
-            "Dangerous": self.__is_dangerous,
+            "Dangerous": self.is_dangerous,
             "Compression ratio": f"{self.__ratio:.2f}"
-            + " Uncompressed size: "
-            + self.__uncompressed_size_str
             + " Compressed size: "
             + self.__compressed_size_str,
+            "Uncompressed size": self.__uncompressed_size_str,
             "Nested zips": self.nested_zips_count,
             "Nested levels": self.highest_level,
-            "Symlinks": self.__symlink_found,
-            "Directory travelsal": self.__directory_travelsal,
+            "Symlinks": self.has_links,
+            "Directory travelsal": self.has_travelsal,
         }
 
     def scan(self) -> bool:
         """
         Scans the zip recursively and returns if the zip should be considered dangerous
+        True if dangerous, False if not.
         :return: boolean
         """
         if not self.__zip_file.exists():
@@ -220,6 +280,9 @@ class DefuseZip:
         self.__set_zip_status()
         self.__set_zip_output()
 
+        if self.__is_dangerous:
+            raise MaliciousFileException(self.__zip_file.name)
+
         return self.__is_dangerous
 
     def output(self):
@@ -228,10 +291,15 @@ class DefuseZip:
         :return:
         """
         self.raise_for_exception()  # pragma: no cover
-        if len(self.__output) <= 0:
-            print("You need to run .is_dangerous() first")  # pragma: no cover
-        for k, v in self.__output.items():
-            print(f"\t{k} = {v}")
+        if not self.__scan_completed:
+            raise Exception(
+                "You need to run a scan first, to get output"
+            )  # pragma: no cover
+        with logger.contextualize(file=self.__zip_file.name):
+            output = logger.safe if not self.__is_dangerous else logger.malicious
+            for k, v in self.__output.items():
+                output(f"\t{k} = {v}")
+            output(f"\tLocation: {self.__zip_file.resolve()}\n")
 
     def get_compression_ratio(self):  # dead: disable
         """
@@ -263,32 +331,17 @@ class DefuseZip:
         if not self.__zip_file.exists():  # pragma: no cover
             raise FileNotFoundError
         if psutil.LINUX:  # pragma: no cover
-            process = psutil.Process()
-            default_cpu = process.rlimit(psutil.RLIMIT_CPU)
-            default_memory = process.rlimit(psutil.RLIMIT_AS)
-            default_filesize = process.rlimit(psutil.RLIMIT_FSIZE)
 
             with ZipFile(self.__zip_file, "r") as zip_ref:
                 if zip_ref.testzip():
                     return False
 
-                process.rlimit(psutil.RLIMIT_CPU, (max_cpu_time, max_cpu_time))
-                process.rlimit(psutil.RLIMIT_AS, (max_memory, max_memory))
-                process.rlimit(psutil.RLIMIT_FSIZE, (max_filesize, max_filesize))
-                zip_ref.extractall(destination_path)
-                try:
-                    process.rlimit(psutil.RLIMIT_CPU, default_cpu)
-                    process.rlimit(psutil.RLIMIT_AS, default_memory)
-                    process.rlimit(psutil.RLIMIT_FSIZE, default_filesize)
-                except Exception:
-                    pass
+                with set_rlimit(max_cpu_time, max_memory, max_filesize):
+                    zip_ref.extractall(destination_path)
         else:
             raise NotImplementedError(
-                "Safe_extract not implemented for Windows"
+                "Safe_extract not implemented only for Linux"
             )  # pragma: no cover
-        # except OSError as e:
-        #    print('oserror:', str(e))
-        #    return False
 
         return True  # pragma: no cover
 
@@ -297,3 +350,25 @@ class DefuseZip:
             raise Exception(
                 "You have to complete a scan before using other methods"
             )  # pragma: no cover
+
+    def extract_all(self, path: Optional[Path]) -> bool:  # pragma: no cover
+        if path:
+            path = Path(path).resolve()
+        logger.info(path)
+        if not self.__scan_completed:  # pragma: no cover
+            if self.scan():
+                raise MaliciousFileException("Scan failed")
+
+        with ZipFile(self.__zip_file) as zip_ref:
+            if len(zip_ref.filelist) <= 0:
+                return False
+            try:
+                zip_ref.extractall(path=path)
+
+                success = path.exists() and len(list(Path(path).iterdir())) > 0
+                if success:
+                    logger.info(f"Archive extracted to: {path}")
+                return success
+            except OSError as e:
+                logger.exception(e)
+                return False

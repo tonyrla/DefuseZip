@@ -130,3 +130,5 @@ create_zipbomb.py
 .vscode/settings.json
 DefuseZip/.vscode/settings.json
 tests/example_zips/zbxl_BAMSOFTWARE.zip
+coverage_html_report/
+py36/

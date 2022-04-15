@@ -6,6 +6,7 @@ from shutil import copy
 import pytest
 
 from DefuseZip.loader import DefuseZip
+from DefuseZip.loader import MaliciousFileException
 
 
 class Test_all:
@@ -34,7 +35,7 @@ class Test_all:
             ratio_threshold=1032,
         )
         defusezip.scan()
-        assert not defusezip.has_travelsal()
+        assert not defusezip.has_travelsal
 
     def test_travelsal_dangerous(self):
         file = Path(__file__).parent / "example_zips" / "travelsal.zip"
@@ -45,8 +46,9 @@ class Test_all:
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        defusezip.scan()
-        assert defusezip.is_dangerous()
+        with pytest.raises(MaliciousFileException):
+            defusezip.scan()
+        assert defusezip.is_dangerous
 
     @pytest.mark.parametrize("filename,expected", testdata)
     def test_is_safe(self, filename: str, expected: bool):
@@ -58,8 +60,12 @@ class Test_all:
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        defusezip.scan()
-        assert defusezip.is_dangerous() == expected
+        try:
+            defusezip.scan()
+        except MaliciousFileException:
+            pass
+
+        assert defusezip.is_dangerous == expected
 
     testdata2 = [
         ("nonexistant.zip", FileNotFoundError, False),
@@ -84,7 +90,7 @@ class Test_all:
                 zfile.unlink()
             defusezip.scan()
 
-    def test_output_safe(self, capsys):
+    def test_output_safe(self, caplog):
         file = Path(__file__).parent / "example_zips" / "LICENSE.zip"
         defusezip = DefuseZip(
             file,
@@ -95,9 +101,8 @@ class Test_all:
         )
         defusezip.scan()
         defusezip.output()
-        captured = capsys.readouterr()
 
-        assert "Dangerous = False" in captured.out
+        assert "Dangerous = False" in caplog.text
 
     def test_safe_extract(self):
         file = Path(__file__).parent / "example_zips" / "single.zip"
@@ -129,7 +134,7 @@ class Test_all:
         assert ex
         assert retval
 
-    def test_output_dangerous(self, capsys):
+    def test_output_dangerous(self, caplog):
         file = Path(__file__).parent / "example_zips" / "travelsal.zip"
         defusezip = DefuseZip(
             file,
@@ -138,16 +143,13 @@ class Test_all:
             nested_zips_limit=100000,
             ratio_threshold=1032,
         )
-        defusezip.scan()
+        with pytest.raises(MaliciousFileException):
+            defusezip.scan()
         defusezip.output()
-        captured = capsys.readouterr()
 
-        assert "Dangerous = True" in captured.out
+        assert "Dangerous = True" in caplog.text
 
-    def test_no_scan(self, capsys):
-        if sys.platform == "win32":
-            assert True
-            return True
+    def test_no_scan(self):
         file = Path(__file__).parent / "example_zips" / "travelsal.zip"
         defusezip = DefuseZip(
             file,
@@ -159,10 +161,7 @@ class Test_all:
         with pytest.raises(Exception):
             defusezip.safe_extract(Path.cwd())
 
-    def test_extract_deleted_file(self, capsys):
-        if sys.platform == "win32":
-            assert True
-            return True
+    def test_extract_deleted_file(self):
         zfile = Path(__file__).parent / "example_zips" / "deleted.zip"
 
         cp = Path(zfile.parent / "single.zip")
@@ -179,3 +178,8 @@ class Test_all:
         with pytest.raises(FileNotFoundError):
             with tempfile.TemporaryDirectory() as tmpdir:
                 defusezip.safe_extract(Path(tmpdir))
+
+    def test_extract_all(self, tmpdir):
+        zfile = Path(__file__).parent / "example_zips" / "single.zip"
+        defusezip = DefuseZip(zfile)
+        assert defusezip.extract_all(tmpdir)
