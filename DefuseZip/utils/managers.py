@@ -1,4 +1,5 @@
 import psutil
+from loguru import logger
 
 
 class set_rlimit:  # pragma: no cover
@@ -22,5 +23,5 @@ class set_rlimit:  # pragma: no cover
             self.process.rlimit(psutil.RLIMIT_CPU, self.default_cpu)
             self.process.rlimit(psutil.RLIMIT_AS, self.default_memory)
             self.process.rlimit(psutil.RLIMIT_FSIZE, self.default_filesize)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.exception(e)

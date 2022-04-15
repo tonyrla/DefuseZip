@@ -1,6 +1,7 @@
 import sys
 import zipfile
 from argparse import ArgumentParser
+from argparse import Namespace
 from pathlib import Path
 from typing import List
 
@@ -19,6 +20,11 @@ class ArgParser(ArgumentParser):
 
 
 def main():
+    opts = parse_arguments()
+    return launch(opts)
+
+
+def parse_arguments():
     args = ArgParser(description="")
     args.add_argument("--file", "-f", type=str, help="Path to zip")
     args.add_argument(
@@ -110,23 +116,25 @@ def main():
         )
 
     opts = args.parse_args()
+    if not opts.file:
+        args.print_help()
+        raise SystemExit(1)
+    return opts
+
+
+def launch(opts: Namespace):
     filename = None
 
     if opts.vercheck:
-
         from DefuseZip import __version__
 
         print(f"DefuseZip v{__version__}")
         raise SystemExit(1)
 
-    if not opts.file:
-        args.print_help()
+    filename = Path(opts.file)
+    if not filename.exists():
+        print(f"File/Folder not found: {opts.file}")
         raise SystemExit(1)
-    else:
-        filename = Path(opts.file)
-        if not filename.exists():
-            print(f"File/Folder not found: {opts.file}")
-            raise SystemExit(1)
     if opts.logtofile:
         logger.add(
             Path("logs") / (filename.name + ".log"),
