@@ -24,11 +24,11 @@ repos:
         args: [--no-strict-optional, --ignore-missing-imports]
         files: ^(DefuseZip/)|^(tests/)
  -  repo: https://github.com/asottile/dead
-    rev: v1.4.0
+    rev: v1.5.0
     hooks:
     -   id: dead
  -  repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.1.13
+    rev: v1.2.0
     hooks:
     -   id: forbid-crlf
     -   id: remove-crlf
