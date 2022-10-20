@@ -48,6 +48,7 @@ class Test_all:
         )
         with pytest.raises(MaliciousFileException):
             defusezip.scan()
+        assert defusezip.has_travelsal
         assert defusezip.is_dangerous
 
     @pytest.mark.parametrize("filename,expected", testdata)

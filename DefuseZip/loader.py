@@ -17,6 +17,11 @@ from loguru import logger
 
 from DefuseZip.utils.managers import set_rlimit  # type: ignore
 
+
+class PreRequisitesNotMetError(Exception):
+    ...
+
+
 logger.remove()
 logger = logger.opt(depth=-1)
 logger.level("malicious", no=50, icon="❌", color="<red>")
@@ -100,6 +105,25 @@ class DefuseZip:
         self.__compressed_size_str: str = ""
         self.__message: str = ""
 
+    def should_return_from_recursion(self) -> bool:
+        if self.__killswitch:
+            return True
+        if self.__nested_zips_limit and (
+            self.nested_zips_count >= self.__nested_zips_limit
+            or self.highest_level > self.__nested_levels_limit
+        ):
+            return True
+        return False
+
+    def should_continue_recursion(self, filename: str) -> bool:
+        if any(travelsal in filename for travelsal in ("../", "..\\")):
+            self.__directory_travelsal = True
+            return True
+        if psutil.LINUX and Path(filename).is_symlink():  # pragma: no cover
+            self.__symlink_found = True
+            return True
+        return False
+
     def __recursive_zips(
         self, zip_bytes: io.BytesIO, level: int = 0
     ) -> Tuple[int, int]:
@@ -112,14 +136,7 @@ class DefuseZip:
         Returns:
             Tuple[int, int]: [description]
         """
-
-        if (
-            self.__nested_zips_limit
-            and self.nested_zips_count >= self.__nested_zips_limit
-            or self.__nested_levels_limit
-            and self.highest_level > self.__nested_levels_limit
-            or self.__killswitch
-        ):
+        if self.should_return_from_recursion():
             return 0, level - 1
 
         toplevel = level
@@ -129,13 +146,8 @@ class DefuseZip:
                 if self.__killswitch:
                     return cur_count, self.__nested_levels_limit
 
-                if "..\\" in f or "../" in f:
-                    self.__directory_travelsal = True
+                if self.should_continue_recursion(f):
                     continue
-                else:
-                    if psutil.LINUX and Path(f).is_symlink():  # pragma: no cover
-                        self.__symlink_found = True
-                        continue
 
                 if f.endswith(".zip"):
                     cur_count += 1
@@ -215,14 +227,19 @@ class DefuseZip:
 
     def __set_zip_status(self):
         """[summary]"""
-        if self.__ratio > self.__ratio_threshold:
-            self.__is_dangerous = True
-        elif self.__nested_zips_limit_reached:
-            self.__is_dangerous = True  # pragma: no cover
-        elif self.__killswitch:
-            self.__is_dangerous = True  # pragma: no cover
-        elif (not self.__symlinks_allowed and self.__symlink_found) or (
+        ratio_check = self.__ratio > self.__ratio_threshold
+        symlinks_check = not self.__symlinks_allowed and self.__symlink_found
+        travelsal_check = (
             self.__directory_travelsal and not self.__directory_travelsal_allowed
+        )
+        if any(
+            (
+                ratio_check,
+                symlinks_check,
+                travelsal_check,
+                self.__killswitch,
+                self.__nested_zips_limit_reached,
+            )
         ):
             self.__is_dangerous = True
 
@@ -292,7 +309,7 @@ class DefuseZip:
         """
         self.raise_for_exception()  # pragma: no cover
         if not self.__scan_completed:
-            raise Exception(
+            raise PreRequisitesNotMetError(
                 "You need to run a scan first, to get output"
             )  # pragma: no cover
         with logger.contextualize(file=self.__zip_file.name):
@@ -347,7 +364,7 @@ class DefuseZip:
 
     def raise_for_exception(self):
         if not self.__scan_completed:  # pragma: no cover
-            raise Exception(
+            raise PreRequisitesNotMetError(
                 "You have to complete a scan before using other methods"
             )  # pragma: no cover
 

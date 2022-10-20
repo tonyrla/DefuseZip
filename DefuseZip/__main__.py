@@ -174,7 +174,7 @@ def launch(opts: Namespace) -> int:
 def scan_files(files: List[Path], opts: Namespace) -> int:
     for file in files:
 
-        zip = DefuseZip(
+        target_zip = DefuseZip(
             file,
             opts.ratio_threshold,
             opts.nested_zips_limit,
@@ -184,23 +184,21 @@ def scan_files(files: List[Path], opts: Namespace) -> int:
             opts.directory_travelsal_allowed,
         )
         try:
-            zip.scan()
+            target_zip.scan()
         except MaliciousFileException:
             sys.tracebacklimit = 0
-            if opts.safe_extract:
-                pass
 
-        zip.output()
+        target_zip.output()
 
         if opts.safe_extract:
             target_path = Path(opts.destination)
 
-            zip.safe_extract(
+            target_zip.safe_extract(
                 target_path, opts.max_cpu_time, opts.max_memory, opts.max_filesize
             )
         else:
-            if opts.destination and not zip.is_dangerous:
-                zip.extract_all(Path(opts.destination) / Path(file).stem)
+            if opts.destination and not target_zip.is_dangerous:
+                target_zip.extract_all(Path(opts.destination) / Path(file).stem)
 
     return 0
 
