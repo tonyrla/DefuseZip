@@ -3,19 +3,27 @@
 branch = True
 relative_files = True
 omit =
-        DefuseZip/__main__.py
+        **/__main__.py
         DefuseZip/__init__.py
 		tests/test_all.py
 		setup.py
         conftest.py
         managers.py
+        gendocs.py
 
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
     # Have to re-enable the standard pragma
     pragma: no cover
-
+omit =
+        **/__main__.py
+        DefuseZip/__init__.py
+		tests/test_all.py
+		setup.py
+        conftest.py
+        managers.py
+        gendocs.py
 
 ignore_errors = True
 
