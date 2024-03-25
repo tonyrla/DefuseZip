@@ -21,7 +21,7 @@ class Test_all:
         ("big_zipbomb.zip", DANGEROUS),
         ("bigger_zipbomb.zip", DANGEROUS),
         ("huge_zipbomb.zip", DANGEROUS),
-        ("zblg_BAMSOFTWARE.zip", DANGEROUS)
+        ("zblg_BAMSOFTWARE.zip", DANGEROUS),
         # ,('zbxl_BAMSOFTWARE.zip', DANGEROUS)
     ]
 
