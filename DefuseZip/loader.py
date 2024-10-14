@@ -18,8 +18,7 @@ from loguru import logger
 from DefuseZip.utils.managers import set_rlimit  # type: ignore
 
 
-class PreRequisitesNotMetError(Exception):
-    ...
+class PreRequisitesNotMetError(Exception): ...
 
 
 logger.remove()
@@ -52,8 +51,7 @@ logger.__class__.malicious = partialmethod(logger.__class__.log, "malicious")
 logger.__class__.safe = partialmethod(logger.__class__.log, "safe")
 
 
-class MaliciousFileException(Exception):
-    ...
+class MaliciousFileException(Exception): ...
 
 
 class DefuseZip:
