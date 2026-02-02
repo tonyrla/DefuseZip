@@ -103,42 +103,42 @@ for file in files:
 ### Example output from output() after calling scan()
 * Single file in zip
 ```
-2022-04-15 11:38:98 | safe      | single.zip           |      Message = Success
-2022-04-15 11:38:98 | safe      | single.zip           |      Dangerous = False
-2022-04-15 11:38:98 | safe      | single.zip           |      Compression ratio = 0.77 Compressed size: 1.16 kilobytes
-2022-04-15 11:38:98 | safe      | single.zip           |      Uncompressed size = 907.00 bytes
-2022-04-15 11:38:98 | safe      | single.zip           |      Nested zips = 0
-2022-04-15 11:38:98 | safe      | single.zip           |      Nested levels = 0
-2022-04-15 11:38:99 | safe      | single.zip           |      Symlinks = False
-2022-04-15 11:38:99 | safe      | single.zip           |      Directory travelsal = False
-2022-04-15 11:38:99 | safe      | single.zip           |      Location: .\tes
+2022-04-15 11:38:18 | safe      | single.zip           |      Message = Success
+2022-04-15 11:38:18 | safe      | single.zip           |      Dangerous = False
+2022-04-15 11:38:18 | safe      | single.zip           |      Compression ratio = 0.77 Compressed size: 1.16 kilobytes
+2022-04-15 11:38:18 | safe      | single.zip           |      Uncompressed size = 907.00 bytes
+2022-04-15 11:38:18 | safe      | single.zip           |      Nested zips = 0
+2022-04-15 11:38:18 | safe      | single.zip           |      Nested levels = 0
+2022-04-15 11:38:19 | safe      | single.zip           |      Symlinks = False
+2022-04-15 11:38:19 | safe      | single.zip           |      Directory travelsal = False
+2022-04-15 11:38:19 | safe      | single.zip           |      Location: .\tes
 ts\example_zips\single.zip
 ```
 * Double nested zips -- with maximum nesting set to 4 : DefuseZip.Loader(..., nested_zips_limit=4)
 ```
-2022-04-15 11:38:86 | malicious | double_nested.zip    |       Message = Success
-2022-04-15 11:38:86 | malicious | double_nested.zip    |       Dangerous = True
-2022-04-15 11:38:86 | malicious | double_nested.zip    |       Compression ratio = 0.02 Compressed size: 871
+2022-04-15 11:38:26 | malicious | double_nested.zip    |       Message = Success
+2022-04-15 11:38:26 | malicious | double_nested.zip    |       Dangerous = True
+2022-04-15 11:38:26 | malicious | double_nested.zip    |       Compression ratio = 0.02 Compressed size: 871
 .00 bytes
-2022-04-15 11:38:86 | malicious | double_nested.zip    |       Uncompressed size = 15.00 bytes
-2022-04-15 11:38:86 | malicious | double_nested.zip    |       Nested zips = 4
-2022-04-15 11:38:87 | malicious | double_nested.zip    |       Nested levels = 2
-2022-04-15 11:38:87 | malicious | double_nested.zip    |       Symlinks = False
-2022-04-15 11:38:87 | malicious | double_nested.zip    |       Directory travelsal = False
-2022-04-15 11:38:87 | malicious | double_nested.zip    |       Location: .\tes
+2022-04-15 11:38:26 | malicious | double_nested.zip    |       Uncompressed size = 15.00 bytes
+2022-04-15 11:38:26 | malicious | double_nested.zip    |       Nested zips = 4
+2022-04-15 11:38:27 | malicious | double_nested.zip    |       Nested levels = 2
+2022-04-15 11:38:27 | malicious | double_nested.zip    |       Symlinks = False
+2022-04-15 11:38:27 | malicious | double_nested.zip    |       Directory travelsal = False
+2022-04-15 11:38:27 | malicious | double_nested.zip    |       Location: .\tes
 ts\example_zips\double_nested.zip
 ```
 * 4.5pb / 46mb BAMSOFTWARE zbxl FLAT zipbomb
 ```
-2022-04-15 11:38:90 | malicious | zbxl_BAMSOFTWARE.zip |       Message = Success
-2022-04-15 11:38:90 | malicious | zbxl_BAMSOFTWARE.zip |       Dangerous = True
-2022-04-15 11:38:90 | malicious | zbxl_BAMSOFTWARE.zip |       Compression ratio = 98262444.02 Compressed si
+2022-04-15 11:38:30 | malicious | zbxl_BAMSOFTWARE.zip |       Message = Success
+2022-04-15 11:38:30 | malicious | zbxl_BAMSOFTWARE.zip |       Dangerous = True
+2022-04-15 11:38:30 | malicious | zbxl_BAMSOFTWARE.zip |       Compression ratio = 98262444.02 Compressed si
 ze: 43.75 megabytes
-2022-04-15 11:38:90 | malicious | zbxl_BAMSOFTWARE.zip |       Uncompressed size = 4.00 petabytes
-2022-04-15 11:38:90 | malicious | zbxl_BAMSOFTWARE.zip |       Nested zips = 0
-2022-04-15 11:38:90 | malicious | zbxl_BAMSOFTWARE.zip |       Nested levels = 0
-2022-04-15 11:38:90 | malicious | zbxl_BAMSOFTWARE.zip |       Symlinks = False
-2022-04-15 11:38:91 | malicious | zbxl_BAMSOFTWARE.zip |       Directory travelsal = False
-2022-04-15 11:38:91 | malicious | zbxl_BAMSOFTWARE.zip |       Location: .\tes
+2022-04-15 11:38:30 | malicious | zbxl_BAMSOFTWARE.zip |       Uncompressed size = 4.00 petabytes
+2022-04-15 11:38:30 | malicious | zbxl_BAMSOFTWARE.zip |       Nested zips = 0
+2022-04-15 11:38:30 | malicious | zbxl_BAMSOFTWARE.zip |       Nested levels = 0
+2022-04-15 11:38:30 | malicious | zbxl_BAMSOFTWARE.zip |       Symlinks = False
+2022-04-15 11:38:31 | malicious | zbxl_BAMSOFTWARE.zip |       Directory travelsal = False
+2022-04-15 11:38:31 | malicious | zbxl_BAMSOFTWARE.zip |       Location: .\tes
 ts\example_zips\zbxl_BAMSOFTWARE.zip
 ```

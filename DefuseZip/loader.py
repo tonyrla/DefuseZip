@@ -38,14 +38,14 @@ logger.add(
     colorize=True,
     filter=lambda record: "file" in record["extra"]
     and "malicious" in record["level"].name,
-    format="<green>{time:YYYY-MM-DD HH:mm:SS}</green> <white>|</white> <red>{level: <9} </red><white>|</white> <red>{extra[file]: <20}</red> <white>|</white> {level.icon: <3} {message}",
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> <white>|</white> <red>{level: <9} </red><white>|</white> <red>{extra[file]: <20}</red> <white>|</white> {level.icon: <3} {message}",
     level="malicious",
 )
 logger.add(
     sys.stderr,
     colorize=True,
     filter=lambda record: "file" in record["extra"] and "safe" in record["level"].name,
-    format="<green>{time:YYYY-MM-DD HH:mm:SS}</green> <white>|</white> <white>{level: <9} </white><white>|</white> <white>{extra[file]: <20}</white> <white>|</white> {level.icon: <3} {message}",
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> <white>|</white> <white>{level: <9} </white><white>|</white> <white>{extra[file]: <20}</white> <white>|</white> {level.icon: <3} {message}",
     level="malicious",
 )
 logger.__class__.malicious = partialmethod(logger.__class__.log, "malicious")
